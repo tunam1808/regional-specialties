@@ -1,70 +1,75 @@
+// Đây là section sản phẩm nổi bật nằm trong trang chủ
+
 import { Button } from "@/components/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import Nem from "@/assets/images/nem-chua-xu-thanh.jpg";
-import Gio from "@/assets/images/go-me.png";
-import Thit from "@/assets/images/thit-trau.jpg";
-import Muc from "@/assets/images/muc.jpg";
-import Com from "@/assets/images/com.jpg";
-import Tet from "@/assets/images/Cach-lam-banh-tet-la-cam.jpg";
-import Cacao from "@/assets/images/572b556865ced7908edf1.jpg";
-import Hat from "@/assets/images/hatdieu.jpg";
+import Nem from "@/assets/images/images-home/nem-chua-xu-thanh.jpg";
+import Gio from "@/assets/images/images-home/go-me.png";
+import Thit from "@/assets/images/images-home/thit-trau.jpg";
+import Muc from "@/assets/images/images-home/muc.jpg";
+import Com from "@/assets/images/images-home/com.jpg";
+import Tet from "@/assets/images/images-home/Cach-lam-banh-tet-la-cam.jpg";
+import Cacao from "@/assets/images/images-home/572b556865ced7908edf1.jpg";
+import Hat from "@/assets/images/images-home/hatdieu.jpg";
 
 const products = [
   {
     id: 1,
     name: "Thịt trâu gác bếp",
-    description: "Hương vị Tây Bắc đậm đà",
+    description:
+      "Thịt trâu gác bếp – đặc sản Tây Bắc, dai ngọt, thơm mùi khói.",
     price: "450.000đ",
     image: Thit,
   },
   {
     id: 2,
-    name: "Nem chua xứ Thanh",
-    description: "Đặc sản xứ Thanh",
+    name: "Nem chua Thanh Hóa",
+    description: "Đặc sản xứ Thanh – chua nhẹ, giòn dai, đậm vị tỏi ớt.",
     price: "120.000đ",
     image: Nem,
   },
   {
     id: 3,
     name: "Giò me Nghệ An",
-    description: "Giò đặc biệt thơm ngon",
+    description: "Thơm mềm, béo ngậy, đậm vị thịt bê ướp gia vị.",
     price: "280.000đ",
     image: Gio,
   },
   {
     id: 4,
     name: "Mực một nắng",
-    description: "Mực nướng giòn ngon",
+    description: "Săn chắc, thơm ngọt, giữ trọn hương vị biển.",
     price: "320.000đ",
     image: Muc,
   },
   {
     id: 5,
     name: "Bánh cốm làng Vòng",
-    description: "Mực nướng giòn ngon",
+    description: "Dẻo thơm vị cốm non, ngọt bùi nhân đậu xanh.",
     price: "68.000đ",
     image: Com,
   },
   {
     id: 6,
     name: "Bánh Tét lá cẩm",
-    description: "Mực nướng giòn ngon",
+    description:
+      "Nếp tím dẻo thơm, nhân đậu xanh thịt mỡ đậm vị Tết phương Nam.",
     price: "78.000đ",
     image: Tet,
   },
   {
     id: 7,
     name: "Bột Cacao nguyên chất ",
-    description: "Mực nướng giòn ngon",
+    description: "Thơm nồng, giàu chất chống oxy hóa, tốt cho sức khỏe.",
     price: "220.000đ",
     image: Cacao,
   },
   {
     id: 8,
     name: "Hạt điều rang muối",
-    description: "Mực nướng giòn ngon",
+    description:
+      "Thơm giòn tự nhiên, vị mặn hài hòa, ăn vặt ngon miệng và bổ dưỡng.",
     price: "160.000đ",
     image: Hat,
   },
@@ -108,15 +113,15 @@ export default function Product_special() {
         </div>
       </motion.div>
 
-      {/* Danh sách sản phẩm với animation */}
-      <div className="flex justify-center gap-8 flex-wrap">
+      {/* Mobile: grid 2 cột, PC: flex như cũ */}
+      <div className="grid grid-cols-2 gap-4 px-3 md:flex md:justify-center md:gap-8 md:flex-wrap">
         {products.map((product, index) => (
           <motion.div
             key={product.id}
             initial={{ opacity: 0, x: -100 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="w-60 border rounded-xl shadow hover:shadow-lg hover:-translate-y-3 transition bg-white group"
+            className="w-full md:w-60 border rounded-xl shadow hover:shadow-lg hover:-translate-y-3 transition bg-white group"
           >
             {/* Ảnh và nút */}
             <div className="relative overflow-hidden rounded-t-md">

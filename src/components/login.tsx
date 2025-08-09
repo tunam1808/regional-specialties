@@ -1,6 +1,8 @@
 import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -88,6 +90,10 @@ function Login() {
           <a href="/register" className="text-green-600 hover:underline">
             Đăng ký ngay
           </a>
+          <Link to="/" className="flex items-center gap-2 hover:text-black">
+            <ArrowLeft />
+            <span>Trở về trang chủ</span>
+          </Link>
         </p>
       </form>
     </div>
