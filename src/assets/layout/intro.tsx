@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/button";
 import Ruong from "@/assets/images/ruong.jpg";
+import { Link } from "react-router-dom";
 
 export default function IntroSection() {
   return (
@@ -36,9 +37,11 @@ export default function IntroSection() {
           Trung nồng nàn và vị ngọt miền Nam – chúng tôi mang đến cho bạn trải
           nghiệm ẩm thực tinh tế từ khắp mọi miền đất nước. Hành trình hương vị
           Việt bắt đầu từ đây.<br></br>
-          <Button variant="default" className="mt-5">
-            Khám phá ngay
-          </Button>
+          <Link to="/about">
+            <Button variant="default" className="mt-5">
+              Khám phá ngay
+            </Button>
+          </Link>
         </motion.p>
       </div>
     </section>

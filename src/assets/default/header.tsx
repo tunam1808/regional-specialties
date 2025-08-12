@@ -53,7 +53,7 @@ export default function Header() {
             Sản phẩm
           </Link>
           <Link
-            to="/product"
+            to="/news"
             className="text-gray-700 hover:text-blue-500 transition"
           >
             Tin tức
