@@ -1,3 +1,6 @@
+import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
+import logo from "@/assets/images/logo.png";
+
 const footerColumns = [
   {
     title: "Về chúng tôi",
@@ -25,14 +28,48 @@ const footerColumns = [
   {
     title: "Liên hệ",
     content: [
-      'Email: <a href="mailto:lienhe@dacsan3mien.vn" class="hover:underline">lienhe@dacsan3mien.vn</a>',
-      'Hotline: <a href="tel:0123456789" class="hover:underline">0123 456 789</a>',
-      '<div class="flex space-x-4 mt-3"><a href="#" class="hover:text-blue-400">Facebook</a><a href="#" class="hover:text-pink-400">Instagram</a><a href="#" class="hover:text-sky-400">Zalo</a></div>',
+      <>
+        Email:{" "}
+        <a href="mailto:lienhe@dacsan3mien.vn" className="hover:underline">
+          mtn.dacsanbamien@gmail.com
+        </a>
+      </>,
+      <>
+        Hotline:{" "}
+        <a href="tel:0123456789" className="hover:underline">
+          0123 456 789
+        </a>
+      </>,
+      <div className="flex gap-4 text-2xl text-yellow-500 mt-2">
+        <a
+          href="https://facebook.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-yellow-400"
+        >
+          <FaFacebook />
+        </a>
+        <a
+          href="https://instagram.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-yellow-400"
+        >
+          <FaInstagram />
+        </a>
+        <a
+          href="https://tiktok.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-yellow-400"
+        >
+          <FaTiktok />
+        </a>
+      </div>,
     ],
   },
 ];
 
-import logo from "@/assets/images/logo.png";
 export default function Footer() {
   return (
     <footer className="bg-[#1A1A1A] text-white pt-12 pb-8 rounded-t-3xl mt-16">
@@ -48,13 +85,12 @@ export default function Footer() {
           </a>
         </div>
 
-        {/* Cột nội dung dùng map */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        {/* Cột nội dung */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {footerColumns.map((col, index) => (
             <div key={index}>
               <h3 className="text-lg font-semibold mb-4">{col.title}</h3>
 
-              {/* Nếu có links thì render danh sách link */}
               {col.links && (
                 <ul className="space-y-2 text-sm">
                   {col.links.map((link, idx) => (
@@ -67,14 +103,11 @@ export default function Footer() {
                 </ul>
               )}
 
-              {/* Nếu có nội dung HTML thô thì render nguy hiểm */}
               {col.content &&
-                col.content.map((html, idx) => (
-                  <p
-                    key={idx}
-                    className="text-sm opacity-80 mb-2"
-                    dangerouslySetInnerHTML={{ __html: html }}
-                  />
+                col.content.map((item, idx) => (
+                  <p key={idx} className="text-sm opacity-80 mb-2">
+                    {item}
+                  </p>
                 ))}
             </div>
           ))}

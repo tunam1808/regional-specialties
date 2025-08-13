@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
+
 import logo from "@/assets/images/logo.png";
 import search from "@/assets/icons/search.svg";
 import { Input } from "@/components/input";
@@ -34,36 +35,63 @@ export default function Header() {
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link to="/">
+        <NavLink to="/">
           <img
             src={logo}
             alt="Logo"
-            className="w-[80px] h-[80px] object-contain cursor-pointer"
+            className="size-[80px] object-contain cursor-pointer"
           />
-        </Link>
+        </NavLink>
 
-        <nav className="flex items-center gap-15 text-xl">
-          <Link to="/" className="text-gray-700 hover:text-blue-500 transition">
+        <nav className="flex items-center gap-[15px] text-base">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `px-3 py-1 rounded-3xl transition ${
+                isActive
+                  ? "bg-slate-700 text-white border "
+                  : "text-gray-500 hover:text-black"
+              }`
+            }
+          >
             Trang chủ
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/products"
-            className="text-gray-700 hover:text-blue-500 transition"
+            className={({ isActive }) =>
+              `px-3 py-1 rounded-3xl transition ${
+                isActive
+                  ? "bg-slate-700 text-white border "
+                  : "text-gray-500 hover:text-black"
+              }`
+            }
           >
             Sản phẩm
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/news"
-            className="text-gray-700 hover:text-blue-500 transition"
+            className={({ isActive }) =>
+              `px-3 py-1 rounded-3xl transition ${
+                isActive
+                  ? "bg-slate-700 text-white border "
+                  : "text-gray-500 hover:text-black"
+              }`
+            }
           >
             Tin tức
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/about"
-            className="text-gray-700 hover:text-blue-500 transition"
+            className={({ isActive }) =>
+              `px-3 py-1 rounded-3xl transition ${
+                isActive
+                  ? "bg-slate-700 text-white border "
+                  : "text-gray-500 hover:text-black"
+              }`
+            }
           >
             Về chúng tôi
-          </Link>
+          </NavLink>
         </nav>
 
         <div className="flex items-center gap-4">

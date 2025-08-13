@@ -7,6 +7,7 @@ import Guide from "@/assets/layout/guide";
 import FunFacts from "../layout/fun_facts";
 import Gallery from "../layout/gallery";
 import Blogs from "../layout/blogs";
+import Contact from "../layout/contact";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
       <Intro />
       <FunFacts />
       <Gallery />
+      <Contact />
       <Footer />
       <main className="flex-grow"></main>
     </div>
