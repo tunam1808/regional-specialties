@@ -1,6 +1,8 @@
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/button";
+import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function BlogSection() {
   const { ref, inView } = useInView({
@@ -66,7 +68,9 @@ export default function BlogSection() {
 
       {/* Nút Xem thêm bên phải */}
       <div className="max-w-6xl mx-auto flex justify-end mb-4 -mt-6">
-        <Button variant="default">Xem thêm</Button>
+        <Link to="/news">
+          <Button variant="default">Xem thêm</Button>
+        </Link>
       </div>
 
       <div
@@ -87,6 +91,11 @@ export default function BlogSection() {
             <div className="p-5">
               <h3 className="text-lg font-semibold mb-2">{post.title}</h3>
               <p className="text-gray-600 text-sm">{post.description}</p>
+              <div className="flex justify-end">
+                <Link to="/news">
+                  <ArrowRight />
+                </Link>
+              </div>
             </div>
           </div>
         ))}
