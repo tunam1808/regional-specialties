@@ -1,3 +1,5 @@
+// Đây là phần giới thiệu vài nét về ẩm thực Việt Nam trong trang Về chúng tôi
+
 import { motion } from "framer-motion";
 
 export default function IntroSection() {

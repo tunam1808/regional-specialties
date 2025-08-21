@@ -1,3 +1,5 @@
+// Đây là trang Về chúng tôi
+
 import Intro_Section from "@/assets/layout/intro_section";
 import Header from "@/assets/default/header";
 import Footer from "@/assets/default/footer";

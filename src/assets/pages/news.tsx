@@ -1,3 +1,5 @@
+// Đây là trang tin tức
+
 import Header from "@/assets/default/header";
 import Footer from "@/assets/default/footer";
 import NewsSection from "@/assets/layout/news_section";

@@ -1,8 +1,10 @@
+// Đây là phần nội dung chính của trang Về chúng tôi
+
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/button";
-import Pho from "@/assets/images/phohanoi.jpg";
-import Banh from "@/assets/images/banhbotloc.jpg";
-import BanhXeo from "@/assets/images/banhxeo.webp";
+import Pho from "@/assets/images/images-about/phohanoi.jpg";
+import Banh from "@/assets/images/images-about/banhbotloc.jpg";
+import BanhXeo from "@/assets/images/images-about/banhxeo.webp";
 
 interface Region {
   name: string;

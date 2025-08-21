@@ -1,29 +1,46 @@
+// Đây là trang tin tức :)))), có 43 cái ảnh thôi mà
+
 import { useState } from "react";
-import BanhCom from "@/assets/images-news/banhcom.jpg";
-import BanhChung from "@/assets/images-news/banhchung.jpg";
-import ComLangVong from "@/assets/images-news/comlangvong.jpg";
-import HoiCho from "@/assets/images-news/hoichotaybac.png";
-import KhenMong from "@/assets/images-news/khenmong.jpg";
-import SaPa from "@/assets/images-news/sapa.jpg";
-import TamGiacMach from "@/assets/images-news/tamgiacmach.jpg";
-import HoaPhuongDo from "@/assets/images-news/hoaphuongdo.jpeg";
-import BanhIt from "@/assets/images-news/banhit.jpg";
-import Vai from "@/assets/images-news/vaithieu.jpg";
-import FeHue from "@/assets/images-news/fehue.jpg";
-import HoaMan from "@/assets/images-news/hoaman.jpg";
-import Hue from "@/assets/images-news/huecodo.jpg";
-import MiQuang from "@/assets/images-news/miquang.jpg";
-import PhoAmThuc from "@/assets/images-news/danang.jpg";
-import FeBien from "@/assets/images-news/phuyen.jpg";
-import TraiCay from "@/assets/images-news/traicaynambo.jpg";
-import ChoNoi from "@/assets/images-news/chonoi.jpg";
-import BanhDanGian from "@/assets/images-news/banhdangian.jpg";
-import ChoBenThanh from "@/assets/images-news/chobenthanh.jpg";
-import DuaBenTre from "@/assets/images-news/duabentre.jpg";
-import ChauDoc from "@/assets/images-news/chaudoc.jpg";
-import HoiChoHaNoi from "@/assets/images-news/hoichohanoi.webp";
-import AmThucDaNang from "@/assets/images-news/phoamthucdanang.png";
-import CaMau from "@/assets/images-news/camau.webp";
+import BanhCom from "@/assets/images/images-news/banhcom.jpg";
+import BanhChung from "@/assets/images/images-news/banhchung.jpg";
+import ComLangVong from "@/assets/images/images-news/comlangvong.jpg";
+import HoiCho from "@/assets/images/images-news/hoichotaybac.png";
+import KhenMong from "@/assets/images/images-news/khenmong.jpg";
+import SaPa from "@/assets/images/images-news/sapa.jpg";
+import TamGiacMach from "@/assets/images/images-news/tamgiacmach.jpg";
+import HoaPhuongDo from "@/assets/images/images-news/hoaphuongdo.jpeg";
+import BanhIt from "@/assets/images/images-news/banhit.jpg";
+import Vai from "@/assets/images/images-news/vaithieu.jpg";
+import FeHue from "@/assets/images/images-news/fehue.jpg";
+import HoaMan from "@/assets/images/images-news/hoaman.jpg";
+import Hue from "@/assets/images/images-news/huecodo.jpg";
+import MiQuang from "@/assets/images/images-news/miquang.jpg";
+import PhoAmThuc from "@/assets/images/images-news/danang.jpg";
+import FeBien from "@/assets/images/images-news/phuyen.jpg";
+import TraiCay from "@/assets/images/images-news/traicaynambo.jpg";
+import ChoNoi from "@/assets/images/images-news/chonoi.jpg";
+import BanhDanGian from "@/assets/images/images-news/banhdangian.jpg";
+import ChoBenThanh from "@/assets/images/images-news/chobenthanh.jpg";
+import DuaBenTre from "@/assets/images/images-news/duabentre.jpg";
+import ChauDoc from "@/assets/images/images-news/chaudoc.jpg";
+import HoiChoHaNoi from "@/assets/images/images-news/hoichohanoi.webp";
+import AmThucDaNang from "@/assets/images/images-news/phoamthucdanang.png";
+import CaMau from "@/assets/images/images-news/camau.webp";
+import CachLamBanhChung from "@/assets/images/images-news/cach-goi-banh-chung.webp";
+import NauPhoHaNoi from "@/assets/images/images-news/congthucphohanoi.jpg";
+import Quang from "@/assets/images/images-news/quang.webp";
+import CaoLau from "@/assets/images/images-news/caolau.jpg";
+import BanhTet from "@/assets/images/images-news/cachlambanhtet.jpg";
+import HuTieu from "@/assets/images/images-news/hutieumytho.webp";
+import ChaCa from "@/assets/images/images-news/chacalavong.jpg";
+import BanhBeo from "@/assets/images/images-news/banhbeo.webp";
+import BanhXeoMienTay from "@/assets/images/images-news/banhxeomientay.jpg";
+import BanhComHangThan from "@/assets/images/images-news/banhcomhangthan.jpg";
+import AmThucMuaThu from "@/assets/images/images-news/am-thuc-ha-noi-vao-thu-3.jpg";
+import AmThucTayBac from "@/assets/images/images-news/amthuctaybac.jpg";
+import ChoDongBa from "@/assets/images/images-news/chodongba.jpg";
+import AmThucMienTay from "@/assets/images/images-news/muanuocnoi.jpg";
+import CaPheViaHe from "@/assets/images/images-news/capheviahe.jpg";
 
 export default function NewsPage() {
   const [activeCategory, setActiveCategory] = useState("Tin tức");
@@ -205,7 +222,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Bắc",
       title: "Bí quyết nấu phở bò chuẩn vị Hà Nội",
-      image: "https://source.unsplash.com/400x250/?pho,vietnam",
+      image: NauPhoHaNoi,
       content:
         "Phở bò Hà Nội nổi tiếng với hương vị thanh tao, nước dùng trong và thơm.",
     },
@@ -214,7 +231,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Bắc",
       title: "Cách làm bánh chưng ngày Tết",
-      image: "https://source.unsplash.com/400x250/?banh-chung,vietnam",
+      image: CachLamBanhChung,
       content:
         "Bánh chưng – món ăn truyền thống không thể thiếu trong dịp Tết cổ truyền.",
     },
@@ -223,7 +240,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Trung",
       title: "Mì Quảng – Tinh hoa ẩm thực xứ Quảng",
-      image: "https://source.unsplash.com/400x250/?mi-quang,vietnam",
+      image: Quang,
       content:
         "Mì Quảng với sợi mì vàng óng, nước dùng đậm đà và rau sống tươi ngon.",
     },
@@ -232,7 +249,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Trung",
       title: "Cao lầu Hội An – Món ăn của phố cổ",
-      image: "https://source.unsplash.com/400x250/?hoi-an,food",
+      image: CaoLau,
       content: "Cao lầu – món mì đặc trưng của Hội An với hương vị độc đáo.",
     },
     {
@@ -276,7 +293,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Nam",
       title: "Cách làm bánh tét lá cẩm Cần Thơ",
-      image: "https://source.unsplash.com/400x250/?banh-tet,vietnam",
+      image: BanhTet,
       content: "Bánh tét lá cẩm – món ăn rực rỡ sắc màu và giàu hương vị.",
     },
     {
@@ -284,7 +301,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Nam",
       title: "Hủ tiếu Mỹ Tho – Hương vị miền sông nước",
-      image: "https://source.unsplash.com/400x250/?hu-tieu,vietnam",
+      image: HuTieu,
       content:
         "Hủ tiếu Mỹ Tho nổi tiếng với nước lèo ngọt thanh và sợi hủ tiếu dai ngon.",
     },
@@ -318,7 +335,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Bắc",
       title: "Chả cá Lã Vọng – Đặc sản Hà Thành",
-      image: "https://source.unsplash.com/400x250/?cha-ca,vietnam",
+      image: ChaCa,
       content:
         "Chả cá Lã Vọng được chế biến tinh tế, ăn kèm bún, rau thơm và mắm tôm.",
     },
@@ -327,7 +344,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Trung",
       title: "Bánh bèo Huế – Món ăn dân dã",
-      image: "https://source.unsplash.com/400x250/?banh-beo,vietnam",
+      image: BanhBeo,
       content: "Bánh bèo Huế mềm mịn, thơm ngon, chan nước mắm đậm vị.",
     },
     {
@@ -335,7 +352,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Nam",
       title: "Bánh xèo miền Tây giòn rụm",
-      image: "https://source.unsplash.com/400x250/?banh-xeo,vietnam",
+      image: BanhXeoMienTay,
       content:
         "Bánh xèo miền Tây vàng ươm, ăn kèm rau sống và nước mắm chua ngọt.",
     },
@@ -344,7 +361,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Bắc",
       title: "Câu chuyện bánh cốm Hàng Than",
-      image: "https://source.unsplash.com/400x250/?banh-com,hanoi",
+      image: BanhComHangThan,
       content:
         "Bánh cốm Hàng Than không chỉ là món quà Hà Nội mà còn là một phần ký ức của nhiều thế hệ...",
     },
@@ -353,7 +370,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Bắc",
       title: "Ẩm thực mùa thu Hà Nội",
-      image: "https://source.unsplash.com/400x250/?hanoi,autumn-food",
+      image: AmThucMuaThu,
       content:
         "Mùa thu Hà Nội nổi bật với cốm làng Vòng, sấu chín, bánh trung thu thập cẩm và nhiều món ấm áp...",
     },
@@ -362,7 +379,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Bắc",
       title: "Khám phá đặc sản vùng núi Tây Bắc",
-      image: "https://source.unsplash.com/400x250/?tay-bac,food",
+      image: AmThucTayBac,
       content:
         "Tây Bắc quyến rũ với thắng cố, lợn cắp nách, rượu ngô men lá và phong vị đậm đà của núi rừng...",
     },
@@ -371,7 +388,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Trung",
       title: "Bánh bèo xứ Huế và bí quyết gia truyền",
-      image: "https://source.unsplash.com/400x250/?banh-beo,hue",
+      image: BanhBeo,
       content:
         "Bánh bèo Huế nổi bật với phần nhân tôm chấy, mỡ hành thơm lừng và nước mắm ớt cay nhẹ...",
     },
@@ -380,7 +397,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Trung",
       title: "Cao lầu Hội An – Hương vị không thể quên",
-      image: "https://source.unsplash.com/400x250/?cao-lau,hoi-an",
+      image: CaoLau,
       content:
         "Cao lầu với sợi mì vàng óng, thịt xá xíu, rau sống Trà Quế đã tạo nên thương hiệu riêng cho Hội An...",
     },
@@ -389,7 +406,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Trung",
       title: "Khám phá chợ Đông Ba",
-      image: "https://source.unsplash.com/400x250/?dong-ba-market,hue",
+      image: ChoDongBa,
       content:
         "Chợ Đông Ba không chỉ là nơi mua sắm mà còn là thiên đường ẩm thực với nhiều món ăn truyền thống...",
     },
@@ -398,7 +415,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Nam",
       title: "Bí quyết làm bánh tét lá cẩm",
-      image: "https://source.unsplash.com/400x250/?banh-tet,can-tho",
+      image: BanhTet,
       content:
         "Bánh tét lá cẩm của Cần Thơ với màu tím tự nhiên, nhân đậu xanh thịt mỡ tạo nên hương vị đặc trưng...",
     },
@@ -407,7 +424,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Nam",
       title: "Khám phá ẩm thực miền Tây mùa nước nổi",
-      image: "https://source.unsplash.com/400x250/?mien-tay,food",
+      image: AmThucMienTay,
       content:
         "Mùa nước nổi mang đến cá linh, bông điên điển, lẩu mắm và nhiều món ăn dân dã đặc trưng miền Tây...",
     },
@@ -416,7 +433,7 @@ export default function NewsPage() {
       category: "Bài viết",
       region: "Miền Nam",
       title: "Sài Gòn và văn hóa cà phê vỉa hè",
-      image: "https://source.unsplash.com/400x250/?saigon,coffee",
+      image: CaPheViaHe,
       content:
         "Cà phê vỉa hè Sài Gòn không chỉ là thức uống mà còn là nét sinh hoạt văn hóa đặc sắc của người dân...",
     },
@@ -491,7 +508,7 @@ export default function NewsPage() {
               <img
                 src={article.image}
                 alt={article.title}
-                className="w-full h-40 object-cover rounded mb-2"
+                className="w-full h-60 object-cover rounded mb-2"
               />
               <div className="p-4">
                 <h3 className="font-semibold text-lg mb-1">{article.title}</h3>

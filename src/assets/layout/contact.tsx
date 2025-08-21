@@ -1,3 +1,5 @@
+// Đây là phần liên hệ với chúng tôi nằm trong trang chủ
+
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin } from "lucide-react";

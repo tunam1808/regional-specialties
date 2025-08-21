@@ -1,3 +1,5 @@
+// Đây là section cách thức đặt hàng trong trang chủ
+
 import {
   FaPhoneAlt,
   FaShoppingBasket,

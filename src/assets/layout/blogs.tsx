@@ -1,3 +1,5 @@
+// Đây là section các bài viết trong trang chủ
+
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/button";

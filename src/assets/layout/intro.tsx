@@ -1,7 +1,9 @@
+// Đây là section khám phá đặc sản ba miền nằm trong trang chủ
+
 import { motion } from "framer-motion";
 import { Button } from "@/components/button";
-import Ruong from "@/assets/images/ruong.jpg";
 import { Link } from "react-router-dom";
+import Ruong from "@/assets/images/images-home/ruong.jpg";
 
 export default function IntroSection() {
   return (

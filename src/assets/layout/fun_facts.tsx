@@ -1,3 +1,5 @@
+// Đây là section các số liệu thống kê nằm trong trang chủ
+
 import { FaUtensils, FaMapMarkedAlt, FaLeaf, FaSmile } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";

@@ -1,3 +1,5 @@
+// Đây là trang sản phẩm
+
 import Header from "@/assets/default/header";
 
 export default function Products() {

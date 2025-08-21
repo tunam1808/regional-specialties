@@ -1,11 +1,13 @@
+// Đây là section thư viện ảnh nằm trong trang chủ
+
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import Bien from "@/assets/images/bien.jpg";
-import Nui from "@/assets/images/nui.jpg";
-import Lua from "@/assets/images/lua.jpg";
-import Lang from "@/assets/images/langque.jpg";
-import Song from "@/assets/images/songnuoc.jpg";
-import BaMien from "@/assets/images/bamien.jpg";
+import Bien from "@/assets/images/images-home/bien.jpg";
+import Nui from "@/assets/images/images-home/nui.jpg";
+import Lua from "@/assets/images/images-home/lua.jpg";
+import Lang from "@/assets/images/images-home/langque.jpg";
+import Song from "@/assets/images/images-home/songnuoc.jpg";
+import BaMien from "@/assets/images/images-home/bamien.jpg";
 
 const images = [
   { src: Nui, alt: "Phong cảnh núi" },
