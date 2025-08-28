@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { Input } from "@/components/input";
 import { Button } from "@/components/button";
-import { Menu, X } from "lucide-react"; // icon hamburger + close
+import { FaBars, FaTimes } from "react-icons/fa";
 import logo from "@/assets/images/img-head-foot/logo.png";
 import search from "@/assets/icons/search.svg";
 
@@ -96,7 +96,7 @@ export default function Header() {
           className="md:hidden p-2"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          {menuOpen ? <X size={28} /> : <Menu size={28} />}
+          {menuOpen ? <FaTimes size={28} /> : <FaBars size={28} />}
         </button>
       </div>
 

@@ -1,7 +1,7 @@
 import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 function Login() {
@@ -91,7 +91,7 @@ function Login() {
             Đăng ký ngay
           </a>
           <Link to="/" className="flex items-center gap-2 hover:text-black">
-            <ArrowLeft />
+            <FaArrowLeft />
             <span>Trở về trang chủ</span>
           </Link>
         </p>

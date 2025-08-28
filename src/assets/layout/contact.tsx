@@ -2,7 +2,7 @@
 
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { MdMail, MdPhone, MdLocationOn } from "react-icons/md";
 
 export default function ContactSection() {
   const { ref, inView } = useInView({
@@ -59,17 +59,17 @@ export default function ContactSection() {
           {/* Thông tin liên hệ */}
           <motion.div {...fadeLeft(0.3)} className="space-y-6">
             <div className="flex items-center gap-4">
-              <Mail className="text-yellow-500" />
+              <MdMail className="text-yellow-500" />
               <span>mtn.dacsanbamien@gmail.com</span>
             </div>
 
             <div className="flex items-center gap-4">
-              <Phone className="text-yellow-500" />
+              <MdPhone className="text-yellow-500" />
               <span>0345 281 795</span>
             </div>
 
             <div className="flex items-center gap-4">
-              <MapPin className="text-yellow-500" />
+              <MdLocationOn className="text-yellow-500" />
               <span>
                 Vinhomes chân đê, Xóm 1, Cổ Điển, Hải Bối, Đông Anh, Hà Nội
               </span>

@@ -3,7 +3,7 @@
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/button";
-import { ArrowRight } from "lucide-react";
+import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 export default function BlogSection() {
@@ -95,7 +95,7 @@ export default function BlogSection() {
               <p className="text-gray-600 text-sm">{post.description}</p>
               <div className="flex justify-end">
                 <Link to="/news">
-                  <ArrowRight />
+                  <FaArrowRight />
                 </Link>
               </div>
             </div>

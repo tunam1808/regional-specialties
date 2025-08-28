@@ -1,7 +1,7 @@
 // Đây là phần đánh giá của khách hàng nằm trong trang chủ
 
 import { Card, CardContent } from "@/components/card";
-import { Star } from "lucide-react";
+import { FaStar } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 
@@ -105,7 +105,7 @@ export default function CustomerReviews() {
                   </p>
                   <div className="flex items-center justify-center space-x-1">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
+                      <FaStar
                         key={i}
                         size={18}
                         className={
