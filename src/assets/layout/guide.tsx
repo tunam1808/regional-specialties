@@ -6,6 +6,7 @@ import {
   FaMotorcycle,
   FaCreditCard,
   FaArrowRight,
+  FaArrowDown,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
@@ -26,41 +27,38 @@ export default function OrderProcess() {
   return (
     <div className="relative py-16 px-4 overflow-hidden" ref={ref}>
       <div className="max-w-screen-xl mx-auto text-center">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <h2
-            className="text-3xl font-bold text-gray-800"
-            style={{ fontFamily: "'Baloo 2', cursive" }}
-          >
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-3xl md:text-3xl font-bold text-black mb-4"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                CÁCH THỨC ĐẶT HÀNG
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
-              </div>
-            </motion.h2>
-          </h2>
-        </div>
+        {/* Tiêu đề */}
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-3xl md:text-3xl font-bold text-black mb-12"
+          style={{ fontFamily: "'Baloo 2', cursive" }}
+        >
+          <div className="flex items-center justify-center gap-4">
+            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+            CÁCH THỨC ĐẶT HÀNG
+            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+          </div>
+        </motion.h2>
 
-        <div className="flex justify-center items-center gap-6 flex-wrap">
+        {/* Các bước */}
+        <div className="flex flex-col md:flex-row justify-center items-center gap-6">
           {steps.map((step, index) => (
             <motion.div
               key={index}
-              className="flex items-center"
+              className="flex flex-col md:flex-row items-center"
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: index * 0.3, duration: 0.6 }}
             >
+              {/* Icon + Text */}
               <div className="flex flex-col items-center w-40">
                 <motion.div className="w-20 h-20 border-2 border-black rounded-full flex items-center justify-center bg-white shadow">
                   {step.icon}
                 </motion.div>
-                <div className="mt-3 text-base text-gray-700 font-medium">
+                <div className="mt-3 text-base text-gray-700 font-medium text-center">
                   {step.label}
                   {step.bold && (
                     <span className="block text-gray-700 mt-1">
@@ -69,9 +67,19 @@ export default function OrderProcess() {
                   )}
                 </div>
               </div>
+
+              {/* Mũi tên chỉ dẫn */}
               {index < steps.length - 1 && (
-                <motion.div className="mx-3 mb-10 text-3xl text-gray-500">
-                  <FaArrowRight />
+                <motion.div
+                  className="text-3xl text-gray-500 flex justify-center items-center
+                             my-4 md:my-0 md:mx-6 md:self-center md:-translate-y-2"
+                  initial={{ opacity: 0 }}
+                  animate={inView ? { opacity: 1 } : {}}
+                  transition={{ delay: index * 0.3 + 0.2, duration: 0.6 }}
+                >
+                  {/* Mobile: mũi tên xuống, Desktop: mũi tên ngang */}
+                  <FaArrowDown className="block md:hidden" />
+                  <FaArrowRight className="hidden md:block" />
                 </motion.div>
               )}
             </motion.div>

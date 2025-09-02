@@ -455,9 +455,9 @@ export default function NewsPage() {
   );
 
   return (
-    <div className="container mx-auto p-6 flex gap-6 mt-20">
+    <div className="container mx-auto p-6 flex flex-col md:flex-row gap-6 mt-20">
       {/* Cột trái - Danh mục */}
-      <div className="w-1/4">
+      <div className="w-full md:w-1/4">
         <h2 className="text-xl font-bold mb-4">Danh mục</h2>
         <ul className="space-y-2">
           {categories.map((cat) => (
@@ -480,9 +480,9 @@ export default function NewsPage() {
       </div>
 
       {/* Cột phải */}
-      <div className="w-3/4">
+      <div className="w-full md:w-3/4">
         {/* Bộ lọc vùng miền */}
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-2 mb-4">
           {regions.map((region) => (
             <button
               key={region}
@@ -502,13 +502,13 @@ export default function NewsPage() {
         </div>
 
         {/* Danh sách bài viết */}
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {paginatedArticles.map((article) => (
             <div key={article.id} className="border rounded shadow-sm">
               <img
                 src={article.image}
                 alt={article.title}
-                className="w-full h-60 object-cover rounded mb-2"
+                className="w-full h-48 sm:h-60 object-cover rounded-t"
               />
               <div className="p-4">
                 <h3 className="font-semibold text-lg mb-1">{article.title}</h3>
