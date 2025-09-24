@@ -12,6 +12,7 @@ import Blogs from "../layout/blogs";
 import Contact from "../layout/contact";
 import Review from "../layout/review";
 import ScrollToTop from "@/components/ScrollToTop";
+import ChatWidget from "@/assets/mini-component/chat-widget";
 
 export default function Home() {
   return (
@@ -30,6 +31,7 @@ export default function Home() {
         <Contact />
       </div>
       <Footer />
+      <ChatWidget />
       <ScrollToTop />
       <main className="flex-grow"></main>
     </div>

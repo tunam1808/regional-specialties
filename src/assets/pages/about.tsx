@@ -4,6 +4,9 @@ import Intro_Section from "@/assets/layout/intro_section";
 import Header from "@/assets/default/header";
 import Footer from "@/assets/default/footer";
 import Main_About from "@/assets/layout/main_about";
+import Mission from "@/assets/layout/mission";
+import ChatWidget from "@/assets/mini-component/chat-widget";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export default function About() {
   return (
@@ -11,8 +14,10 @@ export default function About() {
       <Header />
       <Intro_Section />
       <Main_About />
+      <Mission />
       <Footer />
-      <main className="flex-grow"></main>
+      <ChatWidget />
+      <ScrollToTop />
     </div>
   );
 }

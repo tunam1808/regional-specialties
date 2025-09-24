@@ -3,6 +3,7 @@
 import Header from "@/assets/default/header";
 import Footer from "@/assets/default/footer";
 import NewsSection from "@/assets/layout/news_section";
+import ChatWidget from "@/assets/mini-component/chat-widget";
 
 export default function Products() {
   return (
@@ -11,6 +12,7 @@ export default function Products() {
       <NewsSection />
       <Footer />
       <main className="flex-grow"></main>
+      <ChatWidget />
     </div>
   );
 }

@@ -40,7 +40,7 @@ export default function ScrollToTop() {
           onClick={scrollToTop}
           className="cursor-pointer fixed bottom-6 right-6 p-3 rounded-full bg-yellow-500 text-white shadow-lg hover:bg-yellow-600 transition"
         >
-          <FaArrowUp className="w-6 h-6" />
+          <FaArrowUp className="w-4 h-4" />
         </motion.button>
       )}
     </>
