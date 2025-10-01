@@ -2,20 +2,46 @@ import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { login as loginApi } from "@/api/register-login-logout.api";
+import { showSuccess, showError } from "@/common/toast";
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Đăng nhập với:", { username, password, rememberMe });
+    try {
+      const res = await loginApi({ username, password });
+      console.log("Kết quả đăng nhập:", res);
+
+      if (res.token) {
+        const userData = JSON.stringify(res.user);
+        if (rememberMe) {
+          localStorage.setItem("token", res.token);
+          localStorage.setItem("user", userData);
+        } else {
+          sessionStorage.setItem("token", res.token);
+          sessionStorage.setItem("user", userData);
+        }
+      }
+
+      showSuccess("Đăng nhập thành công!");
+      navigate("/");
+    } catch (err: any) {
+      showError(
+        "Đăng nhập thất bại: " +
+          (err.response?.data?.message || "Sai tài khoản hoặc mật khẩu")
+      );
+    }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br ">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-xl flex flex-col gap-y-4"
@@ -36,7 +62,6 @@ function Login() {
             id="username"
             type="text"
             className="flex-1 h-11 text-base border border-green-600"
-            placeholder=""
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -55,7 +80,6 @@ function Login() {
             id="password"
             type="password"
             className="flex-1 h-11 text-base border border-green-600"
-            placeholder=""
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

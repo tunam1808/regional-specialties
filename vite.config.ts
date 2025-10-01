@@ -14,7 +14,7 @@ export default defineConfig({
   },
   server: {
     open: true, // 👈 Tự động mở trình duyệt
-    port: 3000, // Tuỳ chọn: set cổng
+    port: 5000, // Tuỳ chọn: set cổng
   },
   build: {
     outDir: "dist", // Vercel sẽ lấy thư mục này để deploy

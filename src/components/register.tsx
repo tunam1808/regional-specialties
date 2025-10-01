@@ -1,15 +1,18 @@
 import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { useState } from "react";
+import { showSuccess, showError } from "@/common/toast";
+import { register as registerApi } from "@/api/register-login-logout.api"; // Gọi API đăng ký
 
 function Register() {
+  const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -22,7 +25,27 @@ function Register() {
       return;
     }
 
-    console.log("Đăng ký với:", { username, email, password });
+    console.log("Đăng ký với:", { fullName, username, email, password });
+
+    try {
+      const res = await registerApi({
+        fullname: fullName,
+        username,
+        email,
+        password,
+      });
+
+      console.log("Kết quả đăng ký:", res);
+      showSuccess("Đăng ký thành công!");
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 3000);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || "Tài khoản hoặc email đã tồn tại!";
+      showError("Đăng ký thất bại: " + errorMessage);
+    }
   };
 
   return (
@@ -34,6 +57,24 @@ function Register() {
         <h1 className="text-3xl font-bold text-center text-green-600 mb-2">
           ĐĂNG KÝ
         </h1>
+
+        {/* Full Name */}
+        <div className="flex items-center gap-3">
+          <label
+            htmlFor="fullName"
+            className="w-32 text-base font-medium text-right"
+          >
+            Họ và tên:
+          </label>
+          <Input
+            id="fullName"
+            type="text"
+            className="flex-1 h-11 text-base border border-green-600"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+        </div>
 
         {/* Username */}
         <div className="flex items-center gap-3">
