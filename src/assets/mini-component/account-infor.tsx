@@ -55,7 +55,10 @@ export default function Profile() {
     getProfile()
       .then((data) => {
         const u = data.user || data;
-        setUser(u);
+        setUser({
+          ...u,
+          id: Number(u.id), // Ép kiểu về number
+        });
         setFormData({
           SoDienThoai: u.SoDienThoai || "",
           DiaChi: u.DiaChi || "",
@@ -96,7 +99,15 @@ export default function Profile() {
       }
 
       const updated = await updateUser(user.id.toString(), formData);
-      setUser((prev) => (prev ? { ...prev, ...updated.data } : prev)); // Sử dụng data từ API response
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updated.data,
+              id: Number(updated.data.user_id ?? prev.id),
+            }
+          : prev
+      ); // Sử dụng data từ API response
       setEditing(false);
       showSuccess("Cập nhật thành công");
     } catch (err: any) {

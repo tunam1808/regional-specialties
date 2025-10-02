@@ -2,7 +2,14 @@
 
 import { useInView } from "react-intersection-observer";
 import { motion } from "framer-motion";
-import { MdMail, MdPhone, MdLocationOn } from "react-icons/md";
+import {
+  MdMail,
+  MdPhone,
+  MdLocationOn,
+  MdAccessTime,
+  MdLanguage,
+  MdShare,
+} from "react-icons/md";
 
 export default function ContactSection() {
   const { ref, inView } = useInView({
@@ -76,57 +83,18 @@ export default function ContactSection() {
             </div>
 
             <div className="flex items-center gap-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 text-yellow-500"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v6h4.5m4.5 0A9 9 0 113 12a9 9 0 0118 0z"
-                />
-              </svg>
+              <MdAccessTime className="w-5 h-5 text-yellow-500" />
               <span>Giờ làm việc: 8:00 - 17:00 (T2 - T7)</span>
             </div>
 
             <div className="flex items-center gap-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 text-yellow-500"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-              <span>Website: www.congtyabc.com</span>
+              <MdLanguage className="w-5 h-5 text-yellow-500" />
+              <span>Website: Regional-specialties.vercel.app</span>
             </div>
 
             <div className="flex items-center gap-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 text-yellow-500"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 17v-2a4 4 0 014-4h4V9a4 4 0 00-4-4H9V3L4 7l5 4v-2h4a2 2 0 012 2v2h-4a4 4 0 00-4 4v2z"
-                />
-              </svg>
-              <span>Fanpage: facebook.com/congtyabc</span>
+              <MdShare className="w-5 h-5 text-yellow-500" />
+              <span>Fanpage: MTN Shop - Đặc sản ba miền</span>
             </div>
           </motion.div>
 

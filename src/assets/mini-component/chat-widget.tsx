@@ -1,5 +1,4 @@
-// Đây là component nhỏ dùng để mở cửa sổ chat nhanh với cửa hàng
-
+// ChatWidget.tsx
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaComments, FaTimes, FaPaperPlane } from "react-icons/fa";
@@ -30,7 +29,10 @@ export default function ChatWidget({
   const [unread, setUnread] = useState(0);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll mượt khi có tin nhắn mới
+  const FB_PAGE_ID = "61581439421009";
+  const FB_MESSENGER_URL = `https://m.me/${FB_PAGE_ID}`;
+
+  // Auto-scroll khi có tin nhắn mới
   useEffect(() => {
     if (open && listRef.current) {
       listRef.current.scrollTo({
@@ -38,7 +40,6 @@ export default function ChatWidget({
         behavior: "smooth",
       });
     } else if (!open) {
-      // tăng số tin chưa đọc nếu tin nhắn mới từ shop đến khi đóng
       const last = messages[messages.length - 1];
       if (last && last.from === "shop") {
         setUnread((u) => u + 1);
@@ -46,7 +47,7 @@ export default function ChatWidget({
     }
   }, [messages, open]);
 
-  // Giả lập shop trả lời
+  // Giả lập shop trả lời với các câu gợi ý
   const simulateShopReply = (userText: string) => {
     setIsTyping(true);
     setTimeout(() => {
@@ -57,26 +58,20 @@ export default function ChatWidget({
           userText,
           80
         )}". Sẽ phản hồi nhanh nhất có thể.`,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: timeNow(),
       };
       setMessages((m) => [...m, reply]);
       setIsTyping(false);
     }, 900 + Math.random() * 1200);
   };
 
-  // Khi user click câu hỏi gợi ý
+  // User chọn câu hỏi gợi ý
   const handleSampleQuestion = (item: { q: string; a: string }) => {
     const msg: Message = {
       id: `u_${Date.now()}`,
       from: "user",
       text: item.q,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: timeNow(),
     };
     setMessages((m) => [...m, msg]);
 
@@ -85,10 +80,7 @@ export default function ChatWidget({
         id: `s_${Date.now()}`,
         from: "shop",
         text: item.a,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: timeNow(),
       };
       setMessages((m) => [...m, reply]);
     }, 700);
@@ -101,15 +93,38 @@ export default function ChatWidget({
       id: `u_${Date.now()}`,
       from: "user",
       text: input.trim(),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: timeNow(),
     };
     setMessages((m) => [...m, msg]);
     setInput("");
-    simulateShopReply(msg.text);
     setUnread(0);
+
+    // Danh sách câu hỏi gợi ý
+    const knownQuestions = [
+      "Ship như thế nào?",
+      "Giá bao nhiêu?",
+      "Có khuyến mãi không?",
+    ];
+
+    const isKnown = knownQuestions.some((q) =>
+      msg.text.toLowerCase().includes(q.toLowerCase())
+    );
+
+    if (!isKnown) {
+      const reply: Message = {
+        id: `s_${Date.now()}`,
+        from: "shop",
+        text: "Bạn có thể inbox trực tiếp với admin qua mesengger nhé!",
+        time: timeNow(),
+      };
+      setMessages((m) => [...m, reply]);
+
+      setTimeout(() => {
+        window.open(FB_MESSENGER_URL, "_blank");
+      }, 1200);
+    } else {
+      simulateShopReply(msg.text);
+    }
   };
 
   const toggleOpen = () => {
@@ -120,10 +135,11 @@ export default function ChatWidget({
     });
   };
 
-  // helper: truncate long text
-  function truncate(str: string, n: number) {
-    return str.length > n ? str.slice(0, n - 1) + "…" : str;
-  }
+  // helper
+  const truncate = (str: string, n: number) =>
+    str.length > n ? str.slice(0, n - 1) + "…" : str;
+  const timeNow = () =>
+    new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
     <>
@@ -178,7 +194,7 @@ export default function ChatWidget({
               </button>
             </div>
 
-            {/* Messages (scrollable) */}
+            {/* Messages */}
             <div
               className="flex-1 p-4 overflow-y-auto max-h-[300px]"
               ref={listRef}
@@ -203,7 +219,7 @@ export default function ChatWidget({
                       )}
                     </div>
 
-                    {/* Hiển thị gợi ý ngay sau tin nhắn chào đầu tiên */}
+                    {/* Gợi ý sau tin nhắn đầu tiên */}
                     {idx === 0 && m.from === "shop" && (
                       <div className="self-start mt-1">
                         <ChatSuggestions onSelect={handleSampleQuestion} />
@@ -212,7 +228,6 @@ export default function ChatWidget({
                   </div>
                 ))}
 
-                {/* Typing indicator */}
                 {isTyping && (
                   <div className="self-start bg-gray-100 rounded-2xl rounded-bl-none p-2 px-3">
                     <TypingDots />
