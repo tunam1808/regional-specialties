@@ -103,8 +103,8 @@ export default function Profile() {
         prev
           ? {
               ...prev,
-              ...updated.data,
-              id: Number(updated.data.user_id ?? prev.id),
+              ...(updated.data ?? {}), // nếu undefined thì rỗng
+              id: Number(updated.data?.id ?? prev.id),
             }
           : prev
       ); // Sử dụng data từ API response
