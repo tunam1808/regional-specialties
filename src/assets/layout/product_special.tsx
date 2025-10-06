@@ -4,6 +4,7 @@ import { Button } from "@/components/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import { useNavigate } from "react-router-dom";
 import Nem from "@/assets/images/images-home/nem-chua-xu-thanh.jpg";
 import Gio from "@/assets/images/images-home/go-me.png";
 import Thit from "@/assets/images/images-home/thit-trau.jpg";
@@ -77,6 +78,7 @@ const products = [
 
 export default function Product_special() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
+  const navigate = useNavigate();
 
   return (
     <div
@@ -133,6 +135,9 @@ export default function Product_special() {
               <Button
                 variant="default"
                 className="absolute bottom-15 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold py-1 px-4 rounded-lg"
+                onClick={() => {
+                  navigate("/product-detail");
+                }}
               >
                 Mua hàng
               </Button>

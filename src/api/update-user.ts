@@ -1,17 +1,14 @@
 // Gọi API cập nhật, thêm SĐT, địa chỉ khách hàng
 
 import axios from "axios";
-import type {
-  UpdateUserRequest,
-  UpdateUserResponse,
-} from "@/types/update-user.type";
+import type { UpdateUserResponse, User } from "@/types/update-user.type";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const UPDATE_ENDPOINT = `${API_URL}/auth/users`;
 
 export const updateUser = async (
   userId: string,
-  data: UpdateUserRequest
+  data: Partial<User> // gửi chỉ 1 phần user
 ): Promise<UpdateUserResponse> => {
   const token =
     localStorage.getItem("token") || sessionStorage.getItem("token");

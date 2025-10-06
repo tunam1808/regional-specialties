@@ -1,7 +1,8 @@
 // File này để định nghĩa kiểu cho cập nhật thông tin người dùng
 
 export interface User {
-  id: string;
+  created_at: string | number | Date;
+  id: number;
   fullname: string;
   username: string;
   email: string;
@@ -9,6 +10,8 @@ export interface User {
   avatar: string;
   SoDienThoai?: string;
   DiaChi?: string;
+  MaKH?: number;
+  HoTen?: string;
 }
 
 export interface UpdateUserRequest {
@@ -18,5 +21,5 @@ export interface UpdateUserRequest {
 
 export interface UpdateUserResponse {
   message: string;
-  data?: User;
+  data?: Partial<User>;
 }

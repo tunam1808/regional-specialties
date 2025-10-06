@@ -103,11 +103,12 @@ export default function Profile() {
         prev
           ? {
               ...prev,
-              ...(updated.data ?? {}), // nếu undefined thì rỗng
+              ...(updated.data as Partial<User>), // cast cho chắc
               id: Number(updated.data?.id ?? prev.id),
             }
           : prev
-      ); // Sử dụng data từ API response
+      );
+      // Sử dụng data từ API response
       setEditing(false);
       showSuccess("Cập nhật thành công");
     } catch (err: any) {

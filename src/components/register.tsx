@@ -2,6 +2,7 @@ import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { useState } from "react";
 import { showSuccess, showError } from "@/common/toast";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { register as registerApi } from "@/api/register-login-logout.api"; // Gọi API đăng ký
 
 function Register() {
@@ -11,6 +12,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // state ẩn/hiện mật khẩu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,14 +122,22 @@ function Register() {
           >
             Mật khẩu:
           </label>
-          <Input
-            id="password"
-            type="password"
-            className="flex-1 h-11 text-base border border-green-600"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative flex-1">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"} // Ẩn, hiện mật khẩu
+              className="flex-1 h-11 text-base border border-green-600"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-5 flex items-center cursor-pointer text-gray-500 hover:text-green-600"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
         </div>
 
         {/* Confirm Password */}
@@ -138,14 +148,22 @@ function Register() {
           >
             Xác nhận:
           </label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            className="flex-1 h-11 text-base border border-green-600"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
+          <div className="relative flex-1">
+            <Input
+              id="confirmPassword"
+              type={showPassword ? "text" : "password"} // Ẩn, hiện mật khẩu
+              className="flex-1 h-11 text-base border border-green-600"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-5 flex items-center cursor-pointer text-gray-500 hover:text-green-600"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
         </div>
 
         {/* Checkbox */}

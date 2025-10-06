@@ -1,7 +1,7 @@
 import { Button } from "@/components/button";
 import { Input } from "@/components/input";
 import { useState } from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { login as loginApi } from "@/api/register-login-logout.api";
 import { showSuccess, showError } from "@/common/toast";
@@ -10,6 +10,7 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -19,14 +20,17 @@ function Login() {
       const res = await loginApi({ username, password });
       console.log("Kết quả đăng nhập:", res);
 
+      // ✅ Nếu có token thì luôn lưu vào localStorage (để axios đọc được)
       if (res.token) {
         const userData = JSON.stringify(res.user);
+
+        // Nếu người dùng chọn "Ghi nhớ", lưu thêm flag để tự đăng nhập sau
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("user", userData);
         if (rememberMe) {
-          localStorage.setItem("token", res.token);
-          localStorage.setItem("user", userData);
+          localStorage.setItem("rememberMe", "true");
         } else {
-          sessionStorage.setItem("token", res.token);
-          sessionStorage.setItem("user", userData);
+          localStorage.removeItem("rememberMe");
         }
       }
 
@@ -76,14 +80,24 @@ function Login() {
           >
             Mật khẩu:
           </label>
-          <Input
-            id="password"
-            type="password"
-            className="flex-1 h-11 text-base border border-green-600"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+
+          <div className="relative flex-1">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              className="w-full h-11 text-base border border-green-600 pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-5 flex items-center cursor-pointer text-gray-500 hover:text-green-600"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
         </div>
 
         {/* Remember me */}
