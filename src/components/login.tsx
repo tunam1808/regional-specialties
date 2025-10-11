@@ -35,7 +35,9 @@ function Login() {
       }
 
       showSuccess("Đăng nhập thành công!");
-      navigate("/");
+      setTimeout(() => {
+        navigate("/");
+      }, 800);
     } catch (err: any) {
       showError(
         "Đăng nhập thất bại: " +
@@ -45,12 +47,15 @@ function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-200 via-green-100 to-emerald-200">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-xl flex flex-col gap-y-4"
+        className="relative bg-white/90 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full max-w-xl flex flex-col gap-y-4 border border-green-100"
       >
-        <h1 className="text-3xl font-bold text-center text-green-600 mb-2">
+        {/* Hiệu ứng ánh sáng nền */}
+        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-green-100/60 via-white/30 to-transparent blur-2xl -z-10" />
+
+        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-4 tracking-wide">
           ĐĂNG NHẬP
         </h1>
 
@@ -58,14 +63,14 @@ function Login() {
         <div className="flex items-center gap-3">
           <label
             htmlFor="username"
-            className="w-32 text-base font-medium text-right"
+            className="w-32 text-base font-medium text-right text-green-800"
           >
             Tên đăng nhập:
           </label>
           <Input
             id="username"
             type="text"
-            className="flex-1 h-11 text-base border border-green-600"
+            className="flex-1 h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl shadow-sm"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -76,7 +81,7 @@ function Login() {
         <div className="flex items-center gap-3">
           <label
             htmlFor="password"
-            className="w-32 text-base font-medium text-right"
+            className="w-32 text-base font-medium text-right text-green-800"
           >
             Mật khẩu:
           </label>
@@ -85,7 +90,7 @@ function Login() {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="w-full h-11 text-base border border-green-600 pr-10"
+              className="w-full h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl pr-10 shadow-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -93,7 +98,7 @@ function Login() {
 
             <span
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-5 flex items-center cursor-pointer text-gray-500 hover:text-green-600"
+              className="absolute inset-y-0 right-4 flex items-center cursor-pointer text-gray-500 hover:text-green-700 transition-colors"
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
@@ -117,22 +122,27 @@ function Login() {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full h-11 text-base font-semibold bg-green-600 hover:bg-green-700 mt-2 cursor-pointer"
+          className="w-full h-11 text-base font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl shadow-md mt-4 transition-all duration-200"
         >
           Đăng nhập
         </Button>
 
         {/* No account */}
-        <p className="text-center text-sm text-gray-600 mt-2">
-          Chưa có tài khoản?{" "}
-          <a href="/register" className="text-green-600 hover:underline">
-            Đăng ký ngay
-          </a>
-          <Link to="/" className="flex items-center gap-2 hover:text-black">
+        <div className="text-center text-sm text-gray-600 mt-4 space-y-2">
+          <p>
+            Chưa có tài khoản?{" "}
+            <a href="/register" className="text-green-600 hover:underline">
+              Đăng ký ngay
+            </a>
+          </p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-green-700 hover:text-green-900 font-medium transition-colors"
+          >
             <FaArrowLeft />
             <span>Trở về trang chủ</span>
           </Link>
-        </p>
+        </div>
       </form>
     </div>
   );

@@ -11,7 +11,6 @@ import {
 } from "@/components/table";
 import { Button } from "@/components/button";
 import { FaPlus, FaUser, FaUserShield } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -21,24 +20,53 @@ import {
 import { Input } from "@/components/input";
 import { showSuccess, showError } from "@/common/toast";
 
+// ✅ import API địa chỉ
+import { getProvinces, getDistricts, getWards } from "@/api/address";
+
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [creatingUser, setCreatingUser] = useState<boolean>(false);
   const [formData, setFormData] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const navigate = useNavigate();
+  // ✅ State cho địa chỉ
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
 
   useEffect(() => {
-    userApi.getAll().then(setUsers);
+    async function fetchData() {
+      try {
+        const usersData = await userApi.getAll();
+        setUsers(usersData);
+      } catch (error) {
+        showError("Không thể tải danh sách người dùng!");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+    getProvinces().then(setProvinces);
   }, []);
 
-  const handleDelete = async (id: string | number) => {
-    const numericId = Number(id);
-    if (confirm("Bạn có chắc muốn xóa tài khoản này?")) {
+  const handleDelete = (user: User) => {
+    setUserToDelete(user);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const numericId = Number(userToDelete.id);
       await userApi.remove(numericId);
       setUsers((prev) => prev.filter((u) => Number(u.id) !== numericId));
       showSuccess("Xóa tài khoản thành công!");
+    } catch (error) {
+      showError("Xóa thất bại!");
+    } finally {
+      setUserToDelete(null);
     }
   };
 
@@ -49,10 +77,13 @@ export default function AdminUsers() {
       username: "",
       email: "",
       SoDienThoai: "",
-      DiaChi: "",
+      TinhThanh: "",
+      QuanHuyen: "",
+      PhuongXa: "",
+      DiaChiChiTiet: "",
       avatar: "",
       password: "",
-      role: "user", // Mặc định là user
+      role: "user",
     });
   };
 
@@ -63,37 +94,51 @@ export default function AdminUsers() {
       username: user.username || "",
       email: user.email || "",
       SoDienThoai: user.SoDienThoai || "",
-      DiaChi: user.DiaChi || "",
+      TinhThanh: user.TinhThanh || "",
+      QuanHuyen: user.QuanHuyen || "",
+      PhuongXa: user.PhuongXa || "",
+      DiaChiChiTiet: user.DiaChiChiTiet || "",
       avatar: user.avatar || "",
     });
+
+    // ✅ Khi mở modal edit, nạp sẵn danh sách quận/huyện, phường/xã
+    if (user.TinhThanh) {
+      getDistricts(user.TinhThanh).then(setDistricts);
+    }
+    if (user.QuanHuyen) {
+      getWards(user.QuanHuyen).then(setWards);
+    }
   };
 
   const handleCloseModal = () => {
     setEditingUser(null);
     setCreatingUser(false);
     setFormData({});
+    setDistricts([]);
+    setWards([]);
   };
 
   const handleSave = async () => {
     if (!editingUser) return;
-
     try {
-      const cleanData = Object.fromEntries(
-        Object.entries(formData).map(([key, value]) => [
-          key,
-          value === undefined ? null : value,
-        ])
-      );
+      const cleanData = {
+        fullname: formData.fullname || "",
+        username: formData.username || "",
+        email: formData.email || "",
+        SoDienThoai: formData.SoDienThoai || "",
+        TinhThanh: formData.TinhThanh || "",
+        QuanHuyen: formData.QuanHuyen || "",
+        PhuongXa: formData.PhuongXa || "",
+        DiaChiChiTiet: formData.DiaChiChiTiet || "",
+        avatar: formData.avatar || "",
+      };
 
       console.log("📦 Dữ liệu gửi lên (cập nhật):", cleanData);
-
       const res = await userApi.update(Number(editingUser.id), cleanData);
       showSuccess(res.message || "Cập nhật thành công!");
 
-      // 🔹 Refetch lại toàn bộ danh sách để hiển thị dữ liệu mới
       const updatedList = await userApi.getAll();
       setUsers(updatedList);
-
       handleCloseModal();
     } catch (error: any) {
       console.error("Lỗi cập nhật:", error);
@@ -103,28 +148,26 @@ export default function AdminUsers() {
 
   const handleCreateUser = async () => {
     try {
-      // Tạo một bản sao formData để đảm bảo không ghi đè
       const cleanData = {
         fullname: formData.fullname || "",
         username: formData.username || "",
         email: formData.email || "",
         SoDienThoai: formData.SoDienThoai || "",
-        DiaChi: formData.DiaChi || "",
+        TinhThanh: formData.TinhThanh || "",
+        QuanHuyen: formData.QuanHuyen || "",
+        PhuongXa: formData.PhuongXa || "",
+        DiaChiChiTiet: formData.DiaChiChiTiet || "",
         avatar: formData.avatar || "",
         password: formData.password || "",
         role: "user",
       };
 
       console.log("📦 Dữ liệu gửi lên (tạo tài khoản):", cleanData);
-
       const res = await userApi.create(cleanData);
       showSuccess(res.message || "Tạo tài khoản thành công!");
 
-      // 🔹 Refetch lại danh sách
       const updatedList = await userApi.getAll();
-      console.log("📋 Danh sách sau khi tạo:", updatedList); // Debug danh sách
       setUsers(updatedList);
-
       handleCloseModal();
     } catch (error: any) {
       console.error("Lỗi tạo tài khoản:", error);
@@ -140,18 +183,57 @@ export default function AdminUsers() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    console.log("📝 FormData sau khi thay đổi:", {
+  };
+
+  // ✅ Xử lý chọn địa chỉ
+  const handleProvinceChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const provinceName = e.target.value;
+    const province = provinces.find((p) => p.name === provinceName);
+    setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
-    }); // Debug formData
+      TinhThanh: provinceName,
+      QuanHuyen: "",
+      PhuongXa: "",
+    });
+    if (province) {
+      const data = await getDistricts(province.code);
+      setDistricts(data);
+      setWards([]);
+    }
+  };
+
+  const handleDistrictChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const districtName = e.target.value;
+    const district = districts.find((d) => d.name === districtName);
+    setFormData({
+      ...formData,
+      QuanHuyen: districtName,
+      PhuongXa: "",
+    });
+    if (district) {
+      const data = await getWards(district.code);
+      setWards(data);
+    }
+  };
+
+  const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData({ ...formData, PhuongXa: e.target.value });
   };
 
   const adminAccounts = users.filter((u) => u.role === "admin");
   const userAccounts = users.filter((u) => u.role === "user");
 
+  if (loading) {
+    return <div className="text-center py-10">Đang tải dữ liệu...</div>;
+  }
+
   return (
     <div>
-      {/* 🔹 HEADER */}
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-green-700">Quản lý tài khoản</h2>
         <Button
@@ -162,30 +244,28 @@ export default function AdminUsers() {
         </Button>
       </div>
 
-      {/* 🔹 TABLE GỘP */}
+      {/* TABLE */}
       <div className="bg-white p-4 rounded-xl shadow">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[60px]">ID</TableHead>
-              <TableHead className="w-[140px]">Username</TableHead>
-              <TableHead className="w-[200px]">Email</TableHead>
-              <TableHead className="w-[160px]">Họ tên</TableHead>
-              <TableHead className="w-[120px]">Số điện thoại</TableHead>
-              <TableHead className="w-[200px]">Địa chỉ</TableHead>
-              <TableHead className="w-[100px]">Role</TableHead>
-              <TableHead className="w-[100px]">Avatar</TableHead>
-              <TableHead className="w-[160px]">Ngày tạo</TableHead>
-              <TableHead className="text-right w-[160px]">Hành động</TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Username</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Họ tên</TableHead>
+              <TableHead>Số điện thoại</TableHead>
+              <TableHead>Tỉnh/Thành</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Avatar</TableHead>
+              <TableHead>Ngày tạo</TableHead>
+              <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
-
           <TableBody>
-            {/* --- ADMIN --- */}
             <TableRow>
               <TableCell
                 colSpan={10}
-                className="font-semibold text-green-700 bg-green-50 text-left"
+                className="font-semibold text-green-700 bg-green-50"
               >
                 <div className="flex items-center gap-2">
                   <FaUserShield className="text-red-500" />
@@ -194,62 +274,52 @@ export default function AdminUsers() {
               </TableCell>
             </TableRow>
 
-            {adminAccounts.length > 0 ? (
-              adminAccounts.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.fullname}</TableCell>
-                  <TableCell>{user.SoDienThoai || "-"}</TableCell>
-                  <TableCell>{user.DiaChi || "-"}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="avatar"
-                        className="w-8 h-8 rounded-full"
-                      />
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString("vi-VN")}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditModal(user)}
-                    >
-                      Cập nhật
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="opacity-50 cursor-not-allowed"
-                      disabled
-                    >
-                      Xóa
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center text-gray-500">
-                  Không có tài khoản admin nào.
+            {adminAccounts.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.fullname}</TableCell>
+                <TableCell>{user.SoDienThoai || "-"}</TableCell>
+                <TableCell>{user.TinhThanh || "-"}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt="avatar"
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {new Date(user.created_at).toLocaleDateString("vi-VN")}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditModal(user)}
+                  >
+                    Cập nhật
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(user)} // truyền nguyên user, không phải user.id
+                  >
+                    Xóa
+                  </Button>
                 </TableCell>
               </TableRow>
-            )}
+            ))}
 
-            {/* --- USER --- */}
             <TableRow>
               <TableCell
                 colSpan={10}
-                className="font-semibold text-blue-700 bg-blue-50 text-left"
+                className="font-semibold text-blue-700 bg-blue-50"
               >
                 <div className="flex items-center gap-2">
                   <FaUser className="text-blue-500" /> Tài khoản người dùng
@@ -258,145 +328,152 @@ export default function AdminUsers() {
               </TableCell>
             </TableRow>
 
-            {userAccounts.length > 0 ? (
-              userAccounts.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.fullname}</TableCell>
-                  <TableCell>{user.SoDienThoai || "-"}</TableCell>
-                  <TableCell>{user.DiaChi || "-"}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    {user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="avatar"
-                        className="w-8 h-8 rounded-full"
-                      />
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString("vi-VN")}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditModal(user)}
-                    >
-                      Cập nhật
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      Xóa
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center text-gray-500">
-                  Không có tài khoản user nào.
+            {userAccounts.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.fullname}</TableCell>
+                <TableCell>{user.SoDienThoai || "-"}</TableCell>
+                <TableCell>{user.TinhThanh || "-"}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt="avatar"
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {new Date(user.created_at).toLocaleDateString("vi-VN")}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditModal(user)}
+                  >
+                    Cập nhật
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(user)}
+                  >
+                    Xóa
+                  </Button>
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* 🔹 MODAL CẬP NHẬT HOẶC TẠO MỚI */}
+      {/* MODAL */}
       <Dialog
         open={!!editingUser || creatingUser}
         onOpenChange={handleCloseModal}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">
+            <DialogTitle>
               {creatingUser ? "Tạo tài khoản mới" : "Cập nhật tài khoản"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
-            <div>
-              <label className="text-sm">Họ và tên</label>
-              <Input
-                name="fullname"
-                value={formData.fullname || ""}
-                onChange={handleChange}
-                placeholder="Nhập họ và tên"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm">Tên đăng nhập</label>
-              <Input
-                name="username"
-                value={formData.username || ""}
-                onChange={handleChange}
-                disabled={!!editingUser}
-                placeholder="Nhập tên đăng nhập"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm">Email</label>
-              <Input
-                name="email"
-                value={formData.email || ""}
-                onChange={handleChange}
-                placeholder="Nhập email"
-              />
-            </div>
+            <Input
+              name="fullname"
+              value={formData.fullname || ""}
+              onChange={handleChange}
+              placeholder="Họ và tên"
+            />
+            <Input
+              name="username"
+              value={formData.username || ""}
+              onChange={handleChange}
+              disabled={!!editingUser}
+              placeholder="Tên đăng nhập"
+            />
+            <Input
+              name="email"
+              value={formData.email || ""}
+              onChange={handleChange}
+              placeholder="Email"
+            />
 
             {creatingUser && (
-              <div>
-                <label className="text-sm">Mật khẩu</label>
-                <Input
-                  name="password"
-                  type="password"
-                  value={formData.password || ""}
-                  onChange={handleChange}
-                  placeholder="Nhập mật khẩu"
-                />
-              </div>
+              <Input
+                name="password"
+                type="password"
+                value={formData.password || ""}
+                onChange={handleChange}
+                placeholder="Mật khẩu"
+              />
             )}
 
-            <div>
-              <label className="text-sm">Số điện thoại</label>
-              <Input
-                name="SoDienThoai"
-                value={formData.SoDienThoai || ""}
-                onChange={handleChange}
-                placeholder="Nhập số điện thoại"
-              />
-            </div>
+            <Input
+              name="SoDienThoai"
+              value={formData.SoDienThoai || ""}
+              onChange={handleChange}
+              placeholder="Số điện thoại"
+            />
 
-            <div>
-              <label className="text-sm">Địa chỉ</label>
-              <Input
-                name="DiaChi"
-                value={formData.DiaChi || ""}
-                onChange={handleChange}
-                placeholder="Nhập địa chỉ"
-              />
-            </div>
+            {/* ✅ Phần chọn địa chỉ */}
+            <select
+              name="TinhThanh"
+              value={formData.TinhThanh || ""}
+              onChange={handleProvinceChange}
+              className="border rounded-lg w-full p-2"
+            >
+              <option value="">-- Chọn tỉnh/thành --</option>
+              {provinces.map((p) => (
+                <option key={p.code} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
 
-            <div>
-              <label className="text-sm">Ảnh đại diện (URL)</label>
-              <Input
-                name="avatar"
-                value={formData.avatar || ""}
-                onChange={handleChange}
-                placeholder="Nhập URL ảnh đại diện"
-              />
-            </div>
+            <select
+              name="QuanHuyen"
+              value={formData.QuanHuyen || ""}
+              onChange={handleDistrictChange}
+              className="border rounded-lg w-full p-2"
+              disabled={!formData.TinhThanh}
+            >
+              <option value="">-- Chọn quận/huyện --</option>
+              {districts.map((d) => (
+                <option key={d.code} value={d.name}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              name="PhuongXa"
+              value={formData.PhuongXa || ""}
+              onChange={handleWardChange}
+              className="border rounded-lg w-full p-2"
+              disabled={!formData.QuanHuyen}
+            >
+              <option value="">-- Chọn phường/xã --</option>
+              {wards.map((w) => (
+                <option key={w.code} value={w.name}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+
+            <Input
+              name="DiaChiChiTiet"
+              value={formData.DiaChiChiTiet || ""}
+              onChange={handleChange}
+              placeholder="Địa chỉ chi tiết (số nhà, ngõ...)"
+            />
           </div>
 
           <div className="flex justify-between mt-5">
@@ -407,7 +484,7 @@ export default function AdminUsers() {
               {editingUser?.role === "admin" && !creatingUser && (
                 <Button
                   variant="secondary"
-                  className="bg-yellow-500 text-white hover:bg-yellow-600"
+                  className="bg-yellow-500 text-white"
                   onClick={handleResetPassword}
                 >
                   Đặt lại mật khẩu
@@ -417,6 +494,35 @@ export default function AdminUsers() {
                 {creatingUser ? "Tạo tài khoản" : "Lưu thay đổi"}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* HỘP THOẠI XÁC NHẬN XÓA */}
+      <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa tài khoản</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-gray-600">
+            Bạn có chắc muốn xóa tài khoản{" "}
+            <span className="font-semibold text-red-600">
+              {userToDelete?.username}
+            </span>
+            ? Hành động này không thể hoàn tác.
+          </p>
+
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setUserToDelete(null)}>
+              Hủy
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Xóa
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

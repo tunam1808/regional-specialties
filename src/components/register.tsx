@@ -51,12 +51,12 @@ function Register() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br ">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-green-200 to-green-400">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-xl flex flex-col gap-y-4"
       >
-        <h1 className="text-3xl font-bold text-center text-green-600 mb-2">
+        <h1 className="text-4xl font-extrabold text-center text-green-700 mb-4 tracking-wide">
           ĐĂNG KÝ
         </h1>
 
@@ -71,7 +71,7 @@ function Register() {
           <Input
             id="fullName"
             type="text"
-            className="flex-1 h-11 text-base border border-green-600"
+            className="w-full h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl pr-10 shadow-sm"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
@@ -89,7 +89,7 @@ function Register() {
           <Input
             id="username"
             type="text"
-            className="flex-1 h-11 text-base border border-green-600"
+            className="w-full h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl pr-10 shadow-sm"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -107,7 +107,7 @@ function Register() {
           <Input
             id="email"
             type="email"
-            className="flex-1 h-11 text-base border border-green-600"
+            className="w-full h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl pr-10 shadow-sm"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -122,11 +122,11 @@ function Register() {
           >
             Mật khẩu:
           </label>
-          <div className="relative flex-1">
+          <div className="relative w-full">
             <Input
               id="password"
-              type={showPassword ? "text" : "password"} // Ẩn, hiện mật khẩu
-              className="flex-1 h-11 text-base border border-green-600"
+              type={showPassword ? "text" : "password"}
+              className="w-full h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl pr-10 shadow-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -148,11 +148,11 @@ function Register() {
           >
             Xác nhận:
           </label>
-          <div className="relative flex-1">
+          <div className="relative w-full">
             <Input
               id="confirmPassword"
-              type={showPassword ? "text" : "password"} // Ẩn, hiện mật khẩu
-              className="flex-1 h-11 text-base border border-green-600"
+              type={showPassword ? "text" : "password"}
+              className="w-full h-11 text-base border border-green-500/60 focus:border-green-700 focus:ring-green-500/50 rounded-xl pr-10 shadow-sm"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -186,7 +186,7 @@ function Register() {
         {/* Submit */}
         <Button
           type="submit"
-          className="w-full h-11 text-base font-semibold bg-green-600 hover:bg-green-700 mt-2 cursor-pointer"
+          className="w-full h-11 text-base font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl shadow-md mt-4 transition-all duration-200"
         >
           Đăng ký
         </Button>
