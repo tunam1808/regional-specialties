@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { userApi } from "@/api/user-by-admin";
-import type { User } from "@/types/update-user.type";
+import type { User, CreateUserInput } from "@/types/update-user.type";
 import {
   Table,
   TableBody,
@@ -148,7 +148,7 @@ export default function AdminUsers() {
 
   const handleCreateUser = async () => {
     try {
-      const cleanData = {
+      const cleanData: CreateUserInput = {
         fullname: formData.fullname || "",
         username: formData.username || "",
         email: formData.email || "",

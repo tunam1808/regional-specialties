@@ -21,6 +21,10 @@ export interface User {
   DiaChiDayDu?: string; // địa chỉ gộp tự động (từ DB)
 }
 
+export type CreateUserInput = Omit<User, "id" | "created_at"> & {
+  password: string;
+};
+
 // Dữ liệu gửi khi cập nhật thông tin người dùng
 export interface UpdateUserRequest {
   SoDienThoai?: string;
