@@ -234,298 +234,306 @@ export default function AdminUsers() {
   return (
     <div>
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-green-700">Quản lý tài khoản</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 px-3 sm:px-0 mt-6">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-green-700 text-center sm:text-left w-full mb-6 sm:mb-0">
+          Quản lý tài khoản
+        </h2>
+
         <Button
           onClick={handleCreate}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+          className="flex items-center gap-2 bg-green-500 hover:bg-green-700 text-white"
         >
           <FaPlus /> Tạo tài khoản
         </Button>
       </div>
 
       {/* TABLE */}
-      <div className="bg-white p-4 rounded-xl shadow">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Họ tên</TableHead>
-              <TableHead>Số điện thoại</TableHead>
-              <TableHead>Tỉnh/Thành</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Avatar</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell
-                colSpan={10}
-                className="font-semibold text-green-700 bg-green-50"
-              >
-                <div className="flex items-center gap-2">
-                  <FaUserShield className="text-red-500" />
-                  Tài khoản quản trị (Admin)
-                </div>
-              </TableCell>
-            </TableRow>
-
-            {adminAccounts.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.fullname}</TableCell>
-                <TableCell>{user.SoDienThoai || "-"}</TableCell>
-                <TableCell>{user.TinhThanh || "-"}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="avatar"
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
-                <TableCell>
-                  {new Date(user.created_at).toLocaleDateString("vi-VN")}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditModal(user)}
-                  >
-                    Cập nhật
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(user)} // truyền nguyên user, không phải user.id
-                  >
-                    Xóa
-                  </Button>
-                </TableCell>
+      <div className="w-full bg-white sm:rounded-xl sm:shadow sm:p-4 p-0 rounded-none shadow-none sm:mx-4 mx-0 sm:w-auto">
+        <div className="overflow-x-auto sm:overflow-x-visible">
+          <Table className="min-w-full border-collapse">
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Username</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Họ tên</TableHead>
+                <TableHead>Số điện thoại</TableHead>
+                <TableHead>Tỉnh/Thành</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Avatar</TableHead>
+                <TableHead>Ngày tạo</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
-            ))}
-
-            <TableRow>
-              <TableCell
-                colSpan={10}
-                className="font-semibold text-blue-700 bg-blue-50"
-              >
-                <div className="flex items-center gap-2">
-                  <FaUser className="text-blue-500" /> Tài khoản người dùng
-                  (User)
-                </div>
-              </TableCell>
-            </TableRow>
-
-            {userAccounts.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.fullname}</TableCell>
-                <TableCell>{user.SoDienThoai || "-"}</TableCell>
-                <TableCell>{user.TinhThanh || "-"}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="avatar"
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
-                <TableCell>
-                  {new Date(user.created_at).toLocaleDateString("vi-VN")}
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditModal(user)}
-                  >
-                    Cập nhật
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(user)}
-                  >
-                    Xóa
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* MODAL */}
-      <Dialog
-        open={!!editingUser || creatingUser}
-        onOpenChange={handleCloseModal}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {creatingUser ? "Tạo tài khoản mới" : "Cập nhật tài khoản"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <Input
-              name="fullname"
-              value={formData.fullname || ""}
-              onChange={handleChange}
-              placeholder="Họ và tên"
-            />
-            <Input
-              name="username"
-              value={formData.username || ""}
-              onChange={handleChange}
-              disabled={!!editingUser}
-              placeholder="Tên đăng nhập"
-            />
-            <Input
-              name="email"
-              value={formData.email || ""}
-              onChange={handleChange}
-              placeholder="Email"
-            />
-
-            {creatingUser && (
-              <Input
-                name="password"
-                type="password"
-                value={formData.password || ""}
-                onChange={handleChange}
-                placeholder="Mật khẩu"
-              />
-            )}
-
-            <Input
-              name="SoDienThoai"
-              value={formData.SoDienThoai || ""}
-              onChange={handleChange}
-              placeholder="Số điện thoại"
-            />
-
-            {/* ✅ Phần chọn địa chỉ */}
-            <select
-              name="TinhThanh"
-              value={formData.TinhThanh || ""}
-              onChange={handleProvinceChange}
-              className="border rounded-lg w-full p-2"
-            >
-              <option value="">-- Chọn tỉnh/thành --</option>
-              {provinces.map((p) => (
-                <option key={p.code} value={p.name}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              name="QuanHuyen"
-              value={formData.QuanHuyen || ""}
-              onChange={handleDistrictChange}
-              className="border rounded-lg w-full p-2"
-              disabled={!formData.TinhThanh}
-            >
-              <option value="">-- Chọn quận/huyện --</option>
-              {districts.map((d) => (
-                <option key={d.code} value={d.name}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              name="PhuongXa"
-              value={formData.PhuongXa || ""}
-              onChange={handleWardChange}
-              className="border rounded-lg w-full p-2"
-              disabled={!formData.QuanHuyen}
-            >
-              <option value="">-- Chọn phường/xã --</option>
-              {wards.map((w) => (
-                <option key={w.code} value={w.name}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
-
-            <Input
-              name="DiaChiChiTiet"
-              value={formData.DiaChiChiTiet || ""}
-              onChange={handleChange}
-              placeholder="Địa chỉ chi tiết (số nhà, ngõ...)"
-            />
-          </div>
-
-          <div className="flex justify-between mt-5">
-            <Button variant="outline" onClick={handleCloseModal}>
-              Hủy
-            </Button>
-            <div className="flex gap-2">
-              {editingUser?.role === "admin" && !creatingUser && (
-                <Button
-                  variant="secondary"
-                  className="bg-yellow-500 text-white"
-                  onClick={handleResetPassword}
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell
+                  colSpan={10}
+                  className="font-semibold text-green-700 bg-green-50"
                 >
-                  Đặt lại mật khẩu
-                </Button>
+                  <div className="flex items-center gap-2">
+                    <FaUserShield className="text-red-500" />
+                    Tài khoản quản trị (Admin)
+                  </div>
+                </TableCell>
+              </TableRow>
+
+              {adminAccounts.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.fullname}</TableCell>
+                  <TableCell>{user.SoDienThoai || "-"}</TableCell>
+                  <TableCell>{user.TinhThanh || "-"}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="avatar"
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString("vi-VN")}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditModal(user)}
+                    >
+                      Cập nhật
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(user)} // truyền nguyên user, không phải user.id
+                    >
+                      Xóa
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              <TableRow>
+                <TableCell
+                  colSpan={10}
+                  className="font-semibold text-blue-700 bg-blue-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <FaUser className="text-blue-500" /> Tài khoản người dùng
+                    (User)
+                  </div>
+                </TableCell>
+              </TableRow>
+
+              {userAccounts.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.fullname}</TableCell>
+                  <TableCell>{user.SoDienThoai || "-"}</TableCell>
+                  <TableCell>{user.TinhThanh || "-"}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="avatar"
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString("vi-VN")}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditModal(user)}
+                    >
+                      Cập nhật
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(user)}
+                    >
+                      Xóa
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* MODAL */}
+        <Dialog
+          open={!!editingUser || creatingUser}
+          onOpenChange={handleCloseModal}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {creatingUser ? "Tạo tài khoản mới" : "Cập nhật tài khoản"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <Input
+                name="fullname"
+                value={formData.fullname || ""}
+                onChange={handleChange}
+                placeholder="Họ và tên"
+              />
+              <Input
+                name="username"
+                value={formData.username || ""}
+                onChange={handleChange}
+                disabled={!!editingUser}
+                placeholder="Tên đăng nhập"
+              />
+              <Input
+                name="email"
+                value={formData.email || ""}
+                onChange={handleChange}
+                placeholder="Email"
+              />
+
+              {creatingUser && (
+                <Input
+                  name="password"
+                  type="password"
+                  value={formData.password || ""}
+                  onChange={handleChange}
+                  placeholder="Mật khẩu"
+                />
               )}
-              <Button onClick={creatingUser ? handleCreateUser : handleSave}>
-                {creatingUser ? "Tạo tài khoản" : "Lưu thay đổi"}
+
+              <Input
+                name="SoDienThoai"
+                value={formData.SoDienThoai || ""}
+                onChange={handleChange}
+                placeholder="Số điện thoại"
+              />
+
+              {/* ✅ Phần chọn địa chỉ */}
+              <select
+                name="TinhThanh"
+                value={formData.TinhThanh || ""}
+                onChange={handleProvinceChange}
+                className="border rounded-lg w-full p-2"
+              >
+                <option value="">-- Chọn tỉnh/thành --</option>
+                {provinces.map((p) => (
+                  <option key={p.code} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="QuanHuyen"
+                value={formData.QuanHuyen || ""}
+                onChange={handleDistrictChange}
+                className="border rounded-lg w-full p-2"
+                disabled={!formData.TinhThanh}
+              >
+                <option value="">-- Chọn quận/huyện --</option>
+                {districts.map((d) => (
+                  <option key={d.code} value={d.name}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="PhuongXa"
+                value={formData.PhuongXa || ""}
+                onChange={handleWardChange}
+                className="border rounded-lg w-full p-2"
+                disabled={!formData.QuanHuyen}
+              >
+                <option value="">-- Chọn phường/xã --</option>
+                {wards.map((w) => (
+                  <option key={w.code} value={w.name}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+
+              <Input
+                name="DiaChiChiTiet"
+                value={formData.DiaChiChiTiet || ""}
+                onChange={handleChange}
+                placeholder="Địa chỉ chi tiết (số nhà, ngõ...)"
+              />
+            </div>
+
+            <div className="flex justify-between mt-5">
+              <Button variant="outline" onClick={handleCloseModal}>
+                Hủy
+              </Button>
+              <div className="flex gap-2">
+                {editingUser?.role === "admin" && !creatingUser && (
+                  <Button
+                    variant="secondary"
+                    className="bg-yellow-500 text-white"
+                    onClick={handleResetPassword}
+                  >
+                    Đặt lại mật khẩu
+                  </Button>
+                )}
+                <Button onClick={creatingUser ? handleCreateUser : handleSave}>
+                  {creatingUser ? "Tạo tài khoản" : "Lưu thay đổi"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        {/* HỘP THOẠI XÁC NHẬN XÓA */}
+        <Dialog
+          open={!!userToDelete}
+          onOpenChange={() => setUserToDelete(null)}
+        >
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Xác nhận xóa tài khoản</DialogTitle>
+            </DialogHeader>
+
+            <p className="text-gray-600">
+              Bạn có chắc muốn xóa tài khoản{" "}
+              <span className="font-semibold text-red-600">
+                {userToDelete?.username}
+              </span>
+              ? Hành động này không thể hoàn tác.
+            </p>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={() => setUserToDelete(null)}>
+                Hủy
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Xóa
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      {/* HỘP THOẠI XÁC NHẬN XÓA */}
-      <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Xác nhận xóa tài khoản</DialogTitle>
-          </DialogHeader>
-
-          <p className="text-gray-600">
-            Bạn có chắc muốn xóa tài khoản{" "}
-            <span className="font-semibold text-red-600">
-              {userToDelete?.username}
-            </span>
-            ? Hành động này không thể hoàn tác.
-          </p>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setUserToDelete(null)}>
-              Hủy
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Xóa
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

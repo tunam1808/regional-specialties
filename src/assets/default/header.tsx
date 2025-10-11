@@ -248,6 +248,17 @@ export default function Header() {
                       >
                         Thông tin tài khoản
                       </button>
+                      {user?.role === "admin" && (
+                        <button
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600"
+                          onClick={() => {
+                            navigate("/manage-page");
+                            setDropdownOpen(false);
+                          }}
+                        >
+                          Trang quản lý
+                        </button>
+                      )}
                       <button
                         className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                         onClick={() => {
