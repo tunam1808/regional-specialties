@@ -57,6 +57,11 @@ export default function AdminUsers() {
 
   const confirmDelete = async () => {
     if (!userToDelete) return;
+    if (userToDelete.role === "admin") {
+      showError("Không thể xóa tài khoản quản trị viên (admin)!");
+      setUserToDelete(null);
+      return;
+    }
 
     try {
       const numericId = Number(userToDelete.id);
@@ -258,7 +263,7 @@ export default function AdminUsers() {
                 <TableHead>Email</TableHead>
                 <TableHead>Họ tên</TableHead>
                 <TableHead>Số điện thoại</TableHead>
-                <TableHead>Tỉnh/Thành</TableHead>
+                <TableHead>Địa chỉ</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Avatar</TableHead>
                 <TableHead>Ngày tạo</TableHead>
@@ -312,7 +317,9 @@ export default function AdminUsers() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(user)} // truyền nguyên user, không phải user.id
+                      onClick={() => handleDelete(user)}
+                      className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={user.role === "admin"} // ✅ Không cho xóa tài khoản admin
                     >
                       Xóa
                     </Button>
@@ -367,6 +374,8 @@ export default function AdminUsers() {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(user)}
+                      className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={user.role === "admin"} // ✅ Không cho xóa tài khoản admin
                     >
                       Xóa
                     </Button>
@@ -488,7 +497,7 @@ export default function AdminUsers() {
                 {editingUser?.role === "admin" && !creatingUser && (
                   <Button
                     variant="secondary"
-                    className="bg-yellow-500 text-white"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white"
                     onClick={handleResetPassword}
                   >
                     Đặt lại mật khẩu
