@@ -10,8 +10,11 @@ import { getProvinces, getDistricts, getWards } from "@/api/address";
 import type { Province, District, Ward } from "@/types/address.type";
 import type { User } from "@/types/guest.type";
 
-import { showSuccess, showError } from "@/common/toast";
+// import ảnh nền
+import backgroundImage from "@/assets/images/bg.jpg";
 import avt from "@/assets/images/default.jpg";
+
+import { showSuccess, showError } from "@/common/toast";
 import {
   FaCalendarAlt,
   FaPhoneAlt,
@@ -23,6 +26,68 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+// Thêm CSS cho background và viền
+const backgroundStyles = `
+  .profile-background {
+    background-image: url(${backgroundImage});
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-background::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); 
+    z-index: 0;
+  }
+
+  .profile-content {
+    position: relative;
+    z-index: 10;
+    background: transparent;
+    padding: 1.5rem;
+  }
+
+  .profile-card {
+    border: 5px solid #4f46e5; 
+  }
+
+  .back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    background-color: #4f46e5; /* Màu giống các button khác */
+    color: white;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .back-button:hover {
+    background-color: #4338ca; /* Hiệu ứng hover */
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 640px) {
+    .profile-background {
+      padding: 1rem;
+    }
+    .profile-content {
+      padding: 1rem;
+    }
+  }
+`;
 
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
@@ -121,6 +186,7 @@ export default function Profile() {
     sessionStorage.clear();
     setUser(null);
     navigate("/login");
+    showSuccess("Đã đăng xuất thành công!");
   };
 
   const handleUpdate = async () => {
@@ -158,7 +224,6 @@ export default function Profile() {
       const msg =
         err.response?.data?.message || err.message || "Không xác định";
 
-      // Nếu server báo token hết hạn
       if (
         msg.includes("Token không tồn tại") ||
         msg.includes("Phiên đăng nhập hết hạn") ||
@@ -190,9 +255,8 @@ export default function Profile() {
 
     try {
       setUploading(true);
-      const uploadedUrl = await uploadAvatar(file, user.id); // Gọi API
+      const uploadedUrl = await uploadAvatar(file, user.id);
 
-      // ⚠️ Kiểm tra chắc chắn server trả status 2xx
       if (!uploadedUrl) throw new Error("Upload thất bại!");
 
       const finalUrl = `${uploadedUrl}?v=${Date.now()}`;
@@ -230,219 +294,223 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition"
-      >
-        <FaArrowLeft /> Quay lại
-      </button>
+    <>
+      <style>{backgroundStyles}</style>
+      <div className="profile-background">
+        <div className="max-w-3xl mx-auto p-6 profile-content">
+          {/* Back button */}
+          <button onClick={() => navigate(-1)} className="mb-6 back-button">
+            <FaArrowLeft /> Quay lại
+          </button>
 
-      <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-        {/* Cover + Avatar */}
-        <div className="relative">
-          <div className="h-28 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-          <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2">
-            <div className="relative group">
-              <img
-                src={user.avatar ? `${user.avatar}` : avt}
-                key={user.avatar}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
-              />
-              <label
-                htmlFor="avatar-upload"
-                className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition rounded-full cursor-pointer"
-              >
-                {uploading ? "Đang tải..." : "Đổi ảnh"}
-              </label>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleUploadAvatar}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Thông tin */}
-        <div className="pt-16 pb-6 px-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {user.fullname || user.HoTen}
-          </h2>
-          <p className="text-sm text-gray-500">@{user.username}</p>
-          <p className="mt-2 text-sm text-gray-600">{user.email}</p>
-          <span
-            className={`inline-block mt-3 px-3 py-1 text-sm rounded-full font-medium ${
-              user.role === "admin"
-                ? "bg-red-100 text-red-600"
-                : "bg-green-100 text-green-600"
-            }`}
-          >
-            {user.role}
-          </span>
-        </div>
-
-        {/* Chi tiết */}
-        <div className="border-t px-6 py-4 text-sm text-gray-700 space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="flex items-center gap-2 font-medium">
-              <FaCalendarAlt className="text-indigo-500" /> Tham gia:
-            </span>
-            <span>
-              {(user.created_at || user.NgayDangKy)?.slice(0, 10) || "N/A"}
-            </span>
-          </div>
-
-          {editing ? (
-            <>
-              <div className="flex flex-col gap-1">
-                <label className="font-medium">📞 Số điện thoại</label>
-                <input
-                  type="text"
-                  value={formData.SoDienThoai}
-                  onChange={(e) =>
-                    setFormData({ ...formData, SoDienThoai: e.target.value })
-                  }
-                  className="border px-3 py-2 rounded-lg"
-                />
-              </div>
-
-              {/* Dropdown địa chỉ */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="font-medium">🏙️ Tỉnh/Thành phố</label>
-                  <select
-                    value={formData.TinhThanh}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        TinhThanh: e.target.value,
-                        QuanHuyen: "",
-                        PhuongXa: "",
-                      })
-                    }
-                    className="border px-3 py-2 rounded-lg"
+          {/* Profile Card */}
+          <div className="bg-gradient-to-b from-indigo-50 to-purple-50 rounded-3xl shadow-xl overflow-hidden profile-card">
+            {/* Cover + Avatar */}
+            <div className="relative">
+              <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+              <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2">
+                <div className="relative group">
+                  <img
+                    src={user.avatar || avt}
+                    alt="Avatar"
+                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white opacity-0 group-hover:opacity-100 transition rounded-full cursor-pointer text-sm font-medium"
                   >
-                    <option value="">-- Chọn Tỉnh/Thành --</option>
-                    {provinces.map((p) => (
-                      <option key={p.code} value={p.name}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="font-medium">🏘️ Quận/Huyện</label>
-                  <select
-                    value={formData.QuanHuyen}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        QuanHuyen: e.target.value,
-                        PhuongXa: "",
-                      })
-                    }
-                    className="border px-3 py-2 rounded-lg"
-                  >
-                    <option value="">-- Chọn Quận/Huyện --</option>
-                    {districts.map((d) => (
-                      <option key={d.code} value={d.name}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="font-medium">🏠 Phường/Xã</label>
-                  <select
-                    value={formData.PhuongXa}
-                    onChange={(e) =>
-                      setFormData({ ...formData, PhuongXa: e.target.value })
-                    }
-                    className="border px-3 py-2 rounded-lg"
-                  >
-                    <option value="">-- Chọn Phường/Xã --</option>
-                    {wards.map((w) => (
-                      <option key={w.code} value={w.name}>
-                        {w.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1 col-span-2">
-                  <label className="font-medium">📍 Địa chỉ chi tiết</label>
+                    {uploading ? "Đang tải..." : "Đổi ảnh"}
+                  </label>
                   <input
-                    type="text"
-                    value={formData.DiaChiChiTiet}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        DiaChiChiTiet: e.target.value,
-                      })
-                    }
-                    className="border px-3 py-2 rounded-lg"
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleUploadAvatar}
                   />
                 </div>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2 font-medium">
-                  <FaPhoneAlt className="text-green-500" /> SĐT:
-                </span>
-                <span>{user.SoDienThoai || "Chưa cập nhật"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2 font-medium">
-                  <FaHome className="text-orange-500" /> Địa chỉ:
-                </span>
-                <span>{user.DiaChiDayDu || "Chưa cập nhật"}</span>
-              </div>
-            </>
-          )}
-        </div>
+            </div>
 
-        {/* Nút hành động */}
-        <div className="px-6 pb-6 flex justify-center gap-4">
-          {editing ? (
-            <>
-              <button
-                onClick={handleUpdate}
-                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition"
+            {/* User Info */}
+            <div className="pt-20 text-center px-6">
+              <h2 className="text-3xl font-bold text-gray-800">
+                {user.fullname || user.HoTen}
+              </h2>
+              <p className="text-sm text-gray-500">@{user.username}</p>
+              <p className="mt-1 text-sm text-gray-600">{user.email}</p>
+              <span
+                className={`inline-block mt-3 px-4 py-1 text-sm rounded-full font-semibold ${
+                  user.role === "admin"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-green-100 text-green-600"
+                }`}
               >
-                <FaSave /> Lưu
-              </button>
-              <button
-                onClick={() => setEditing(false)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition"
-              >
-                <FaTimes /> Hủy
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:bg-indigo-600 transition"
-            >
-              <FaEdit /> Cập nhật
-            </button>
-          )}
+                {user.role}
+              </span>
+            </div>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition"
-          >
-            <FaSignOutAlt /> Đăng xuất
-          </button>
+            {/* Details */}
+            <div className="px-6 py-6 text-gray-700 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Ngày tham gia */}
+                <div className="p-4 bg-white rounded-xl shadow hover:shadow-md transition">
+                  <div className="flex items-center gap-2 font-medium text-indigo-500">
+                    <FaCalendarAlt /> Tham gia
+                  </div>
+                  <div>
+                    {(user.created_at || user.NgayDangKy)?.slice(0, 10) ||
+                      "N/A"}
+                  </div>
+                </div>
+
+                {/* SĐT */}
+                <div className="p-4 bg-white rounded-xl shadow hover:shadow-md transition">
+                  <div className="flex items-center gap-2 font-medium text-green-500">
+                    <FaPhoneAlt /> SĐT
+                  </div>
+                  {editing ? (
+                    <input
+                      type="text"
+                      value={formData.SoDienThoai}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          SoDienThoai: e.target.value,
+                        })
+                      }
+                      className="mt-2 w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                    />
+                  ) : (
+                    <div className="mt-1">
+                      {user.SoDienThoai || "Chưa cập nhật"}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Địa chỉ */}
+              <div className="p-4 bg-white rounded-xl shadow hover:shadow-md transition">
+                <div className="flex items-center gap-2 font-medium text-orange-500">
+                  <FaHome /> Địa chỉ
+                </div>
+                {editing ? (
+                  <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Tỉnh/Thành */}
+                    <select
+                      value={formData.TinhThanh}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          TinhThanh: e.target.value,
+                          QuanHuyen: "",
+                          PhuongXa: "",
+                        })
+                      }
+                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                    >
+                      <option value="">-- Chọn Tỉnh/Thành --</option>
+                      {provinces.map((p) => (
+                        <option key={p.code} value={p.name}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Quận/Huyện */}
+                    <select
+                      value={formData.QuanHuyen}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          QuanHuyen: e.target.value,
+                          PhuongXa: "",
+                        })
+                      }
+                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                    >
+                      <option value="">-- Chọn Quận/Huyện --</option>
+                      {districts.map((d) => (
+                        <option key={d.code} value={d.name}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Phường/Xã */}
+                    <select
+                      value={formData.PhuongXa}
+                      onChange={(e) =>
+                        setFormData({ ...formData, PhuongXa: e.target.value })
+                      }
+                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                    >
+                      <option value="">-- Chọn Phường/Xã --</option>
+                      {wards.map((w) => (
+                        <option key={w.code} value={w.name}>
+                          {w.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Địa chỉ chi tiết */}
+                    <input
+                      type="text"
+                      value={formData.DiaChiChiTiet}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          DiaChiChiTiet: e.target.value,
+                        })
+                      }
+                      placeholder="Địa chỉ chi tiết"
+                      className="md:col-span-2 w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-1">
+                    {user.DiaChiDayDu || "Chưa cập nhật"}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 pb-6 flex flex-wrap justify-center gap-4">
+              {editing ? (
+                <>
+                  <button
+                    onClick={handleUpdate}
+                    className="flex items-center gap-2 px-6 py-2 bg-green-500 text-white rounded-xl shadow hover:bg-green-600 transition"
+                  >
+                    <FaSave /> Lưu
+                  </button>
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="flex items-center gap-2 px-6 py-2 bg-gray-200 text-gray-800 rounded-xl shadow hover:bg-gray-300 transition"
+                  >
+                    <FaTimes /> Hủy
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center gap-2 px-6 py-2 bg-indigo-500 text-white rounded-xl shadow hover:bg-indigo-600 transition"
+                >
+                  <FaEdit /> Chỉnh sửa
+                </button>
+              )}
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-2 bg-gray-200 text-gray-800 rounded-xl shadow hover:bg-gray-300 transition"
+              >
+                <FaSignOutAlt /> Đăng xuất
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
