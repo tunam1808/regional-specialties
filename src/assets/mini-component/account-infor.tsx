@@ -48,6 +48,9 @@ export default function Profile() {
 
     if (!token) {
       setLoading(false);
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
       return;
     }
 
@@ -60,10 +63,16 @@ export default function Profile() {
           TinhThanh: u.TinhThanh || "",
           QuanHuyen: u.QuanHuyen || "",
           PhuongXa: u.PhuongXa || "",
-          DiaChiChiTiet: u.DiaChiChiTiet || "",
+          DiaChiChiTiet: u.DiaChi ?? "",
         });
       })
-      .catch(() => setUser(null))
+      .catch(() => {
+        showError("⏳ Phiên đăng nhập đã hết hạn!");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -99,7 +108,6 @@ export default function Profile() {
   }, [districts, formData.QuanHuyen]);
 
   if (loading) return <p className="text-center mt-10">⏳ Đang tải...</p>;
-  if (!user) return <p className="text-center mt-10">⚠️ Chưa đăng nhập</p>;
 
   const handleLogout = () => {
     localStorage.clear();
@@ -140,7 +148,29 @@ export default function Profile() {
       setEditing(false);
       showSuccess("Cập nhật thông tin thành công!");
     } catch (err: any) {
-      showError("Lỗi khi cập nhật: " + (err.message || "Không xác định"));
+      const msg =
+        err.response?.data?.message || err.message || "Không xác định";
+
+      // Nếu server báo token hết hạn
+      if (
+        msg.includes("Token không tồn tại") ||
+        msg.includes("Phiên đăng nhập hết hạn") ||
+        msg.includes("Unauthorized")
+      ) {
+        showError("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+        setTimeout(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          navigate("/login");
+        }, 2000);
+      } else {
+        showError("Lỗi khi cập nhật: " + msg);
+        setTimeout(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          navigate("/login");
+        }, 2000);
+      }
     }
   };
 
@@ -153,7 +183,11 @@ export default function Profile() {
 
     try {
       setUploading(true);
-      const uploadedUrl = await uploadAvatar(file, user.id);
+      const uploadedUrl = await uploadAvatar(file, user.id); // Gọi API
+
+      // ⚠️ Kiểm tra chắc chắn server trả status 2xx
+      if (!uploadedUrl) throw new Error("Upload thất bại!");
+
       const finalUrl = `${uploadedUrl}?v=${Date.now()}`;
 
       setUser((prev) => {
@@ -165,7 +199,23 @@ export default function Profile() {
 
       showSuccess("Ảnh đại diện đã được cập nhật!");
     } catch (err: any) {
-      showError("Lỗi upload ảnh: " + (err.message || "Không xác định"));
+      const msg =
+        err.response?.data?.message || err.message || "Không xác định";
+
+      if (
+        msg.includes("Token không tồn tại") ||
+        msg.includes("Phiên đăng nhập hết hạn") ||
+        msg.includes("Unauthorized")
+      ) {
+        showError("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+        setTimeout(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          navigate("/login");
+        }, 2000);
+      } else {
+        showError("Lỗi upload ảnh: " + msg);
+      }
     } finally {
       e.target.value = "";
       setUploading(false);

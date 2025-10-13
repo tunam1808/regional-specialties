@@ -41,7 +41,17 @@ export default function AdminUsers() {
       try {
         const usersData = await userApi.getAll();
         setUsers(usersData);
-      } catch (error) {
+      } catch (error: any) {
+        // Nếu lỗi là do token, axiosInstance đã tự xử lý, nên không show thêm
+        const msg = error.response?.data?.message || error.message || "";
+        if (
+          msg.includes("Token") ||
+          msg.includes("Phiên đăng nhập") ||
+          msg.includes("Unauthorized")
+        ) {
+          // Bỏ qua, đã handled ở axiosInstance
+          return;
+        }
         showError("Không thể tải danh sách người dùng!");
       } finally {
         setLoading(false);

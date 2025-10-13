@@ -1,4 +1,4 @@
-// File này
+// File này gọi API tỉnh thành cả nước
 import axios from "axios";
 
 const BASE_URL = "https://provinces.open-api.vn/api";

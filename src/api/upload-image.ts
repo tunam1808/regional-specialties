@@ -1,7 +1,5 @@
 // src/api/upload-image.ts
-import axios from "axios";
-
-const BASE_SERVER = import.meta.env.VITE_BASE_SERVER;
+import api from "./axiosInstance";
 
 /**
  * Upload avatar file + cập nhật DB
@@ -19,14 +17,23 @@ export const uploadAvatar = async (
 
   console.log("📤 Bắt đầu upload:", file.name);
 
-  const res = await axios.post(`${BASE_SERVER}/api/upload`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  try {
+    const res = await api.post("/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-  console.log("✅ BE trả về URL:", res.data.url);
+    // Nếu server không trả url → ném lỗi
+    if (!res.data?.url) {
+      throw new Error(res.data?.message || "Upload thất bại!");
+    }
 
-  // ⚙️ BE đã trả về URL đầy đủ, dùng luôn
-  return res.data.url;
+    console.log("✅ BE trả về URL:", res.data.url);
+    return res.data.url;
+  } catch (err: any) {
+    // Nếu token hết hạn hoặc lỗi 401 → ném lỗi để frontend bắt
+    if (err.response?.status === 401) {
+      throw new Error("Unauthorized: Phiên đăng nhập hết hạn");
+    }
+    throw err;
+  }
 };
