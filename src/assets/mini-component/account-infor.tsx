@@ -108,6 +108,13 @@ export default function Profile() {
   }, [districts, formData.QuanHuyen]);
 
   if (loading) return <p className="text-center mt-10">⏳ Đang tải...</p>;
+  if (!user) {
+    return (
+      <p className="text-center mt-10 text-gray-500">
+        Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.
+      </p>
+    );
+  }
 
   const handleLogout = () => {
     localStorage.clear();
