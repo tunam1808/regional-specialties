@@ -1,6 +1,6 @@
 # Dưới đây là thông tin chi tiết và hướng dẫn chạy dự án
 
-- Dự án gồm 3 phần:
+- Dự án gồm 4 phần:
 
 ## Frontend:
 
@@ -14,7 +14,7 @@
 
 - index.html (không chỉnh sửa gì thêm)
 - public: nơi chứa logo trên thanh tab (không chỉnh sửa gì thêm)
-- dist: chứa file built để deploy (taml thời chưa cần quan tâm)
+- dist: chứa file built để deploy
 - package.json: chứa các framework và thư viện đã cài thông qua lệnh terminal (không nên chỉnh sửa)
 - src: thư mục chính, chứa các file chúng ta sẽ làm việc (có thể sửa xóa thoải mái)
 
@@ -27,8 +27,13 @@
 
 ## Backend:
 
-- NodeJs
+- NodeJs + Express
 
 ## Database
 
-- Hệ QTSCDL: MySql hoặc MongoDB (chưa triển khai)
+- Hệ QTSCDL: MySQL Workbench
+
+## Nền tảng Deploy
+
+- Frontend: Vercel
+- Backend & CSDL: Railway
