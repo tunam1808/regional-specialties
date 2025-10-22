@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaStar, FaRegStar, FaTimes, FaEnvelope } from "react-icons/fa";
 import { sendFeedback } from "@/api/feedback";
 import { showSuccess, showError } from "@/common/toast";
-import toast from "react-hot-toast";
 
 export default function FloatingReview() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,9 +35,9 @@ export default function FloatingReview() {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 401) {
-        toast.error("Vui lòng đăng nhập để gửi đánh giá!");
+        showError("Vui lòng đăng nhập để gửi đánh giá!");
       } else {
-        toast.error("Gửi đánh giá thất bại, vui lòng thử lại!");
+        showError("Gửi đánh giá thất bại, vui lòng thử lại!");
       }
       console.error("❌ Lỗi khi gửi đánh giá:", err);
     } finally {
