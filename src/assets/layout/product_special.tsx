@@ -136,7 +136,14 @@ export default function Product_special() {
                 variant="default"
                 className="absolute bottom-15 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold py-1 px-4 rounded-lg"
                 onClick={() => {
-                  navigate("/product-detail");
+                  const isLoggedIn =
+                    localStorage.getItem("token") ||
+                    localStorage.getItem("user");
+                  if (!isLoggedIn) {
+                    navigate("/login"); // nếu chưa đăng nhập
+                  } else {
+                    navigate("/product-detail"); // nếu đã đăng nhập
+                  }
                 }}
               >
                 Mua hàng
