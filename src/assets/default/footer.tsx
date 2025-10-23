@@ -1,5 +1,3 @@
-// Đây là phần đầu trang (bao gồm thanh menu ngang, thanh tìm kiếm, mục tài khoản,...)
-
 import { FaFacebook, FaInstagram, FaTiktok } from "react-icons/fa";
 import logo from "@/assets/images/img-head-foot/logo.png";
 
@@ -40,6 +38,16 @@ const footerColumns = [
       { name: "Câu hỏi thường gặp", href: "/faq" },
       { name: "Mã giảm giá", href: "/voucher" },
       { name: "Liên hệ", href: "/#contact" },
+    ],
+  },
+  {
+    title: "Đội ngũ của chúng tôi",
+    content: [
+      <ul className="space-y-2 leading-7">
+        <li className="opacity-80">Vũ Tú Nam</li>
+        <li className="opacity-80">Đỗ Thị Mai</li>
+        <li className="opacity-80">Nguyễn Hồng Thịnh</li>
+      </ul>,
     ],
   },
   {
@@ -92,7 +100,7 @@ export default function Footer() {
     <footer className="bg-[#1A1A1A] text-white pt-12 pb-8 rounded-t-3xl mt-16">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Các cột */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-11 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-11 text-sm">
           {footerColumns.map((col, index) => (
             <div key={index}>
               {col.title && (

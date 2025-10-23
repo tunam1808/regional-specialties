@@ -15,6 +15,7 @@ import Profile from "@/assets/mini-component/account-infor";
 import ProductDetail from "@/assets/layout/product-detail";
 import AdminPage from "@/assets/admin/manage-page";
 import AccountManage from "@/assets/admin/account-manage";
+import FeedbackManage from "@/assets/admin/feedback-manage";
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/manage-page" element={<AdminPage />}>
           <Route index element={<AccountManage />} />
           <Route path="account-manage" element={<AccountManage />} />
+          <Route path="feedback-manage" element={<FeedbackManage />} />
         </Route>
       </Routes>
     </Router>

@@ -6,6 +6,7 @@ import {
   FaHome,
   FaSignOutAlt,
   FaBars,
+  FaRegStar,
 } from "react-icons/fa";
 import { useState } from "react";
 
@@ -64,6 +65,18 @@ export default function AdminLayout() {
             onClick={() => setIsOpen(false)}
           >
             <FaBoxOpen /> Quản lý sản phẩm
+          </NavLink>
+
+          <NavLink
+            to="feedback-manage"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-6 py-3 text-base hover:bg-green-600 transition ${
+                isActive ? "bg-green-600 font-semibold" : ""
+              }`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            <FaRegStar /> Quản lý bài đánh giá
           </NavLink>
 
           <NavLink
