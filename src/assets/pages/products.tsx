@@ -1,14 +1,14 @@
 // Đây là trang sản phẩm
 
 import Header from "@/assets/default/header";
+import ProductChild from "@/assets/layout/product_child";
 
 export default function Products() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="flex mt-50 justify-center items-center text-[50px]">
-        Trang đang phát triển :(((((
-      </div>
+      <ProductChild />
+     
       <main className="flex-grow"></main>
     </div>
   );
