@@ -62,7 +62,8 @@ const products = [
   {
     id: 7,
     name: "Kẹo dừa Bến Tre ",
-    description: "Hoà quyện nước cốt dừa và mạch nha, tạo nên những viên kẹo vị ngọt nhẹ.",
+    description:
+      "Hoà quyện nước cốt dừa và mạch nha, tạo nên những viên kẹo vị ngọt nhẹ.",
     price: "120.000đ",
     image: Keo,
   },
