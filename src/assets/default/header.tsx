@@ -122,6 +122,7 @@ export default function Header() {
                   {user.fullname}
                 </span>
               </button>
+
               {dropdownOpen && (
                 <div className="absolute md:right-0 md:left-auto left-0 mt-2 w-48 bg-white shadow-lg rounded-md py-2 border z-50">
                   <button
@@ -147,7 +148,7 @@ export default function Header() {
                   <button
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     onClick={() => {
-                      navigate("/orders");
+                      navigate("/cart");
                       setDropdownOpen(false);
                     }}
                   >

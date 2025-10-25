@@ -13,9 +13,11 @@ import NavToContact from "@/assets/small-function/nav-to-contact";
 import Voucher from "@/assets/mini-component/voucher-wheel";
 import Profile from "@/assets/mini-component/account-infor";
 import ProductDetail from "@/assets/layout/product-detail";
+import Cart from "@/assets/mini-component/cart";
 import AdminPage from "@/assets/admin/manage-page";
 import AccountManage from "@/assets/admin/account-manage";
 import FeedbackManage from "@/assets/admin/feedback-manage";
+import ProductsManage from "@/assets/admin/products-manage";
 
 export default function App() {
   return (
@@ -38,11 +40,13 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/account-infor" element={<Profile />} />{" "}
         <Route path="/product-detail" element={<ProductDetail />} />
+        <Route path="/cart" element={<Cart />} />
         {/*Trang quản lý của admin */}
         <Route path="/manage-page" element={<AdminPage />}>
           <Route index element={<AccountManage />} />
           <Route path="account-manage" element={<AccountManage />} />
           <Route path="feedback-manage" element={<FeedbackManage />} />
+          <Route path="products-manage" element={<ProductsManage />} />
         </Route>
       </Routes>
     </Router>
