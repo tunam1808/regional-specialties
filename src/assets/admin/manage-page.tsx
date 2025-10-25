@@ -23,7 +23,6 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-gray-100 relative">
       {/* 🔹 Overlay (chỉ mobile) */}
-
       <button
         className="md:hidden fixed top-6 left-4 p-2 bg-green-700 text-white rounded-lg shadow-md"
         onClick={() => setIsOpen(!isOpen)}
@@ -33,16 +32,17 @@ export default function AdminLayout() {
 
       {/* 🔹 SIDEBAR */}
       <aside
-        className={`bg-green-700 text-white flex flex-col w-64 md:relative md:translate-x-0 md:h-auto md:flex
-        fixed top-0 left-0 h-full z-40 transform transition-transform duration-300
-        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`bg-green-700 text-white flex flex-col w-64 md:h-screen md:fixed md:top-0 md:left-0 z-40 transition-transform duration-300
+        ${
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        } md:flex`}
       >
         <div className="p-4 text-2xl font-bold border-b border-green-500 text-center relative">
           Admin Page
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 mt-4">
+        <nav className="flex-1 mt-4 overflow-y-auto">
           <NavLink
             to="account-manage"
             className={({ isActive }) =>
@@ -113,9 +113,10 @@ export default function AdminLayout() {
       </aside>
 
       {/* 🔹 CONTENT */}
-      <main className="flex-1 p-0 sm:p-6 overflow-y-auto">
+      <main className="flex-1 p-0 sm:p-6 overflow-y-auto ml-0 md:ml-64">
         <Outlet />
       </main>
+
       {/* 🔹 Overlay (chỉ mobile) */}
       {isOpen && (
         <div

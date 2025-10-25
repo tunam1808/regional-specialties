@@ -3,59 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { FaChevronDown, FaShoppingCart } from "react-icons/fa";
 import { Button } from "@/components/button";
-import Banhdauxanh from "@/assets/images/img-produce/Banh-dau-xanh.jpg";
-import Comchay from "@/assets/images/img-produce/com_chay.png";
-import Banhsua from "@/assets/images/img-produce/banh-sua-non-moc-chau.jpg";
-import Cakho from "@/assets/images/img-produce/ca_kho.png";
-import Che from "@/assets/images/img-produce/che.png";
-import Comlam from "@/assets/images/img-produce/Comlam.webp";
-import Chamuc from "@/assets/images/img-produce/cha_muc.png";
-import Mangtruc from "@/assets/images/img-produce/Mang-truc.jpg";
-import Banhda from "@/assets/images/img-produce/banhda-kienkhe.png";
-import Banhdacua from "@/assets/images/img-produce/banhdacua.png";
-import Banhmicay from "@/assets/images/img-produce/banhmicay.jpg";
-import buncarodong from "@/assets/images/img-produce/bunca-rodong.png";
-import Buncha from "@/assets/images/img-produce/buncha.png";
-import Gadoi from "@/assets/images/img-produce/ga-doi.png";
-import Hatde from "@/assets/images/img-produce/hatde.jpeg";
-import Khaunhuc from "@/assets/images/img-produce/khau-nhuc.png";
-import Phohanoi from "@/assets/images/img-produce/pho.png";
-import Ruoucan from "@/assets/images/img-produce/ruoucancan.jpg";
-import Thittrau from "@/assets/images/img-produce/thit_trau.jpeg";
-import Xoisacmau from "@/assets/images/img-produce/xoi-sac-mau.jpg";
-import Comhanoi from "@/assets/images/img-produce/com_hanoi.jpeg";
-import Lonquay from "@/assets/images/img-produce/heo-quay.jpg";
-import Banhphuthe from "@/assets/images/img-produce/banhxuxue.jpg";
-import Hongtreogio from "@/assets/images/img-produce/hongtreogio.jpg";
-import Longnhan from "@/assets/images/img-produce/long-nhan-hung-yen.png";
-import Mackhen from "@/assets/images/img-produce/mac-khen.jpg";
-import Muckho from "@/assets/images/img-produce/muc-kho-ha-long.jpg";
-import Omaiman from "@/assets/images/img-produce/o-mai-man-ha-noi.png";
-import Banhcay from "@/assets/images/img-produce/banh-cay.jpg";
-import Canhsan from "@/assets/images/img-produce/Canhrausan.webp";
-import Chaolong from "@/assets/images/img-produce/chaolong.jpg";
-import Caborim from "@/assets/images/img-produce/Ca-bo-rim.jpg";
-import Thitchua from "@/assets/images/img-produce/thit-chua-phu-tho.jpg";
-import Banhbeohue from "@/assets/images/img-produce/banh-beo-hue.jpg";
-import Banhbotloc from "@/assets/images/img-produce/banh-bot-loc-hue.jpg";
-import Banhtrangcuonthit from "@/assets/images/img-produce/banh-trang-cuon-thit-heo-da-nang-AB.jpg";
-import Banhuotthitnuong from "@/assets/images/img-produce/banh-uot-thit-nuong-hue.jpg";
-import Banhitlagai from "@/assets/images/img-produce/banhitlagai.jpg";
-import Bunbohue from "@/assets/images/img-produce/bun-bo-hue.png";
-import Bunchaca from "@/assets/images/img-produce/bun-cha-ca-quang-ngai.jpg";
-import Banhcanhhe from "@/assets/images/img-produce/bát bánh canh hẹ.jpeg";
-import Chebap from "@/assets/images/img-produce/che-bap-hoi-an.jpg";
-import Comhen from "@/assets/images/img-produce/comhen.jpg";
-import Hattieu from "@/assets/images/img-produce/hạt tiêu.png";
-
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  region: string;
-  type: string;
-  price: string;
-}
+import { getAllSanPham } from "@/api/product";
+import type { SanPham, Product } from "@/types/product.type";
 
 const Products = () => {
   const [selectedRegion, setSelectedRegion] = useState("Tất cả");
@@ -63,6 +12,9 @@ const Products = () => {
   const [subCategory, setSubCategory] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [isSticky, setIsSticky] = useState(false);
@@ -71,10 +23,65 @@ const Products = () => {
   const navigate = useNavigate();
 
   const regions = [
-    { name: "Bắc", sub: ["Tại chỗ", "khô"] },
-    { name: "Trung", sub: ["Tại chỗ", "khô"] },
-    { name: "Nam", sub: ["Tại chỗ", "khô"] },
+    { name: "Bắc", sub: ["Tại chỗ", "Đồ khô"], apiValue: "bac" },
+    { name: "Trung", sub: ["Tại chỗ", "Đồ khô"], apiValue: "trung" },
+    { name: "Nam", sub: ["Tại chỗ", "Đồ khô"], apiValue: "nam" },
   ];
+
+  // Hàm format giá
+  const formatPrice = (price: number, type: string): string => {
+    const formattedPrice = price.toLocaleString("vi-VN");
+    const unit = type === "Tại chỗ" ? "/đĩa" : "/hộp";
+    return `${formattedPrice}đ${unit}`;
+  };
+
+  // Chuyển đổi đường dẫn ảnh
+  const getImageUrl = (hinhAnh: string | undefined) => {
+    if (!hinhAnh) return "/img-produce/default.jpg";
+    // Thử ảnh tĩnh trước (localhost:5000/img-produce/)
+    const staticImageUrl = hinhAnh; // /img-produce/ten-anh.jpg
+    // Nếu ảnh tĩnh không tồn tại, dùng ảnh động (localhost:4000/uploads/)
+    const dynamicImageUrl = hinhAnh.replace(
+      "/img-produce/",
+      "http://localhost:4000/uploads/"
+    );
+    return staticImageUrl; // Mặc định trả về static, kiểm tra lỗi trong <img>
+  };
+
+  // Lấy dữ liệu từ API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const regionApiValue =
+          selectedRegion === "Tất cả"
+            ? undefined
+            : regions.find((r) => r.name === selectedRegion)?.apiValue;
+        const subCategoryApiValue =
+          subCategory === "Tại chỗ"
+            ? "Tại chỗ"
+            : subCategory === "Đồ khô"
+            ? "Đồ khô"
+            : undefined;
+        const data = await getAllSanPham(regionApiValue, subCategoryApiValue);
+        const formattedProducts: Product[] = data.map((item: SanPham) => ({
+          id: item.MaSP || 0,
+          name: item.TenSP,
+          image: item.HinhAnh || "/img-produce/default.jpg",
+          region: item.VungMien || "bac",
+          type: item.LoaiDoAn || "Đồ khô",
+          price: formatPrice(item.GiaBan, item.LoaiDoAn || "Đồ khô"),
+        }));
+        setProducts(formattedProducts);
+      } catch (err) {
+        setError("Không thể tải sản phẩm, xin thử lại sau! (⁠╥⁠﹏⁠╥⁠) :33333");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [selectedRegion, subCategory]);
 
   // Kiểm tra kích thước màn hình để đặt itemsPerPage
   useEffect(() => {
@@ -135,6 +142,7 @@ const Products = () => {
     };
   }, [mobileOpen]);
 
+  // Xử lý sticky sidebar
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 100) {
@@ -148,543 +156,12 @@ const Products = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const products: Product[] = [
-    {
-      id: 1,
-      name: "Lợn quay ",
-      image: Lonquay,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "155.000đ/đĩa",
-    },
-    {
-      id: 2,
-      name: "Bánh Đậu Xanh",
-      image: Banhdauxanh,
-      region: "Bắc",
-      type: " khô",
-      price: " 40.000đ/hộp",
-    },
-    {
-      id: 3,
-      name: "Bánh sữa Mộc Châu",
-      image: Banhsua,
-      region: "Bắc",
-      type: "khô",
-      price: "30.000đ/hộp",
-    },
-    {
-      id: 4,
-      name: "Cơm cháy Ninh Bình",
-      image: Comchay,
-      region: "Bắc",
-      type: "khô",
-      price: "35.000đ/hộp",
-    },
-    {
-      id: 5,
-      name: "Chè Thái Nguyên",
-      image: Che,
-      region: "Bắc",
-      type: "khô",
-      price: "35.000đ/hộp",
-    },
-    {
-      id: 6,
-      name: "Chả mực Hạ Long",
-      image: Chamuc,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/đĩa",
-    },
-    {
-      id: 7,
-      name: "Cốm Hà Nội",
-      image: Comhanoi,
-      region: "Bắc",
-      type: "Khô",
-      price: "30.000đ/hộp",
-    },
-    {
-      id: 8,
-      name: "Bánh mì cay Hải Phòng",
-      image: Banhmicay,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "5.000đ/cái",
-    },
-    {
-      id: 9,
-      name: "Cơm Lam",
-      image: Comlam,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/bó",
-    },
-    {
-      id: 10,
-      name: "Cá kho",
-      image: Cakho,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/đĩa",
-    },
-    {
-      id: 11,
-      name: "Thịt trâu gác bếp",
-      image: Thittrau,
-      region: "Bắc",
-      type: "khô",
-      price: "600.000đ/hộp",
-    },
-    {
-      id: 12,
-      name: "Hạt dẻ",
-      image: Hatde,
-      region: "Bắc",
-      type: "khô",
-      price: "80.000đ/hộp",
-    },
-    {
-      id: 13,
-      name: "Xôi sắc màu",
-      image: Xoisacmau,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/đĩa",
-    },
-    {
-      id: 14,
-      name: "Rượu cần",
-      image: Ruoucan,
-      region: "Bắc",
-      type: "khô",
-      price: "120.000đ/bình",
-    },
-    {
-      id: 15,
-      name: "Gà đồi",
-      image: Gadoi,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "150.000đ/đĩa",
-    },
-    {
-      id: 16,
-      name: "Khâu nhục Lạng sơn",
-      image: Khaunhuc,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "200.000đ/tô",
-    },
-    {
-      id: 17,
-      name: "Bún chả Hà Nội",
-      image: Buncha,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/tô",
-    },
-    {
-      id: 18,
-      name: "Phở Hà Nội",
-      image: Phohanoi,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 19,
-      name: "Bún cá rô đồng",
-      image: buncarodong,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/tô",
-    },
-    {
-      id: 20,
-      name: "Bánh Đa",
-      image: Banhda,
-      region: "Bắc",
-      type: "Khô",
-      price: "20.000đ/cái",
-    },
-    {
-      id: 21,
-      name: "Măng trúc",
-      image: Mangtruc,
-      region: "Bắc",
-      type: "khô",
-      price: "50.000đ/hộp",
-    },
-    {
-      id: 22,
-      name: "Bánh đa cua Hải Phòng",
-      image: Banhdacua,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "50.000đ/tô",
-    },
-    {
-      id: 23,
-      name: "Mực khô Hải Phòng",
-      image: Muckho,
-      region: "Bắc",
-      type: "khô",
-      price: "400.000đ/kg",
-    },
-    {
-      id: 24,
-      name: "Hồng treo gió",
-      image: Hongtreogio,
-      region: "Bắc",
-      type: "khô",
-      price: "160.000đ/kg",
-    },
-    {
-      id: 25,
-      name: "Bánh phu thê Bắc Ninh",
-      image: Banhphuthe,
-      region: "Bắc",
-      type: "Khô",
-      price: "8.000đ/cái",
-    },
-    {
-      id: 26,
-      name: "Long nhãn Hưng Yên",
-      image: Longnhan,
-      region: "Bắc",
-      type: "khô",
-      price: "50.000đ/hộp",
-    },
-    {
-      id: 27,
-      name: "Bánh cáy Thái Bình",
-      image: Banhcay,
-      region: "Bắc",
-      type: "khô",
-      price: "40.000đ/hộp",
-    },
-    {
-      id: 28,
-      name: "Mắc khén Tây Bắc",
-      image: Mackhen,
-      region: "Bắc",
-      type: "khô",
-      price: "40.000đ/kg",
-    },
-    {
-      id: 29,
-      name: "Mận sấy",
-      image: Omaiman,
-      region: "Bắc",
-      type: "khô",
-      price: "60.000đ/hộp",
-    },
-    {
-      id: 30,
-      name: "Cháo lòng",
-      image: Chaolong,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "30.000đ/tô",
-    },
-    {
-      id: 31,
-      name: "Canh rau sắn muối chua",
-      image: Canhsan,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "50.000đ/tô",
-    },
-    {
-      id: 32,
-      name: "Thịt chua Phú Thọ",
-      image: Thitchua,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "50.000đ/đĩa",
-    },
-    {
-      id: 33,
-      name: "Phở Hà Nội",
-      image: Phohanoi,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 34,
-      name: "Bún cá rô đồng",
-      image: buncarodong,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/tô",
-    },
-    {
-      id: 35,
-      name: "Bánh Đa",
-      image: Banhda,
-      region: "Bắc",
-      type: "Khô",
-      price: "20.000đ/cái",
-    },
-    {
-      id: 36,
-      name: "Măng trúc",
-      image: Mangtruc,
-      region: "Bắc",
-      type: "khô",
-      price: "50.000đ/hộp",
-    },
-    {
-      id: 37,
-      name: "Bánh đa cua Hải Phòng",
-      image: Banhdacua,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "50.000đ/tô",
-    },
-    {
-      id: 38,
-      name: "Phở Hà Nội",
-      image: Phohanoi,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 39,
-      name: "Bún cá rô đồng",
-      image: buncarodong,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/tô",
-    },
-    {
-      id: 40,
-      name: "Bánh Đa",
-      image: Banhda,
-      region: "Bắc",
-      type: "Khô",
-      price: "20.000đ/cái",
-    },
-    {
-      id: 41,
-      name: "Măng trúc",
-      image: Mangtruc,
-      region: "Bắc",
-      type: "khô",
-      price: "50.000đ/hộp",
-    },
-    {
-      id: 42,
-      name: "Bánh đa cua Hải Phòng",
-      image: Banhdacua,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "50.000đ/tô",
-    },
-    {
-      id: 43,
-      name: "Phở Hà Nội",
-      image: Phohanoi,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 44,
-      name: "Bún cá rô đồng",
-      image: buncarodong,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "60.000đ/tô",
-    },
-    {
-      id: 45,
-      name: "Bánh Đa",
-      image: Banhda,
-      region: "Bắc",
-      type: "Khô",
-      price: "20.000đ/cái",
-    },
-    {
-      id: 46,
-      name: "Măng trúc",
-      image: Mangtruc,
-      region: "Bắc",
-      type: "khô",
-      price: "50.000đ/hộp",
-    },
-    {
-      id: 47,
-      name: "Bánh đa cua Hải Phòng",
-      image: Banhdacua,
-      region: "Bắc",
-      type: "Tại chỗ",
-      price: "50.000đ/tô",
-    },
-    {
-      id: 48,
-      name: "Chè bắp",
-      image: Chebap,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/ly",
-    },
-    {
-      id: 49,
-      name: "Bánh bột lọc",
-      image: Banhbotloc,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "6.000đ/cái",
-    },
-    {
-      id: 50,
-      name: "Bún bò Huế",
-      image: Bunbohue,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 51,
-      name: "Bánh bèo Huế",
-      image: Banhbeohue,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "60.000đ/cái",
-    },
-    {
-      id: 52,
-      name: "Cơm hến",
-      image: Comhen,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 53,
-      name: "Hạt tiêu",
-      image: Hattieu,
-      region: "Trung",
-      type: "khô",
-      price: "60.000đ/kg",
-    },
-    {
-      id: 54,
-      name: "Bún chả cá",
-      image: Bunchaca,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 55,
-      name: "Bánh ít lá gai",
-      image: Banhitlagai,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "60.000đ/cặp",
-    },
-    {
-      id: 56,
-      name: "Bánh ít thịt nướng",
-      image: Banhuotthitnuong,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 57,
-      name: "Bánh tráng cuộn thịt",
-      image: Banhtrangcuonthit,
-      region: "Trung",
-      type: "khô",
-      price: "60.000đ/cặp",
-    },
-    {
-      id: 58,
-      name: "Bánh canh hẹ",
-      image: Banhcanhhe,
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 59,
-      name: "Ca bò rim",
-      image: Caborim,
-      region: "Trung",
-      type: "khô",
-      price: "60.000đ/hộp",
-    },
-    {
-      id: 60,
-      name: "Mì Quảng",
-      image: "https://picsum.photos/200/200?3",
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 61,
-      name: "Tré Bà Đệ",
-      image: "https://picsum.photos/200/200?4",
-      region: "Trung",
-      type: "khô",
-      price: "60.000đ/cặp",
-    },
-    {
-      id: 62,
-      name: "Mì Quảng",
-      image: "https://picsum.photos/200/200?3",
-      region: "Trung",
-      type: "Tại chỗ",
-      price: "40.000đ/tô",
-    },
-    {
-      id: 63,
-      name: "Tré Bà Đệ",
-      image: "https://picsum.photos/200/200?4",
-      region: "Trung",
-      type: "khô",
-      price: "60.000đ/cặp",
-    },
-    {
-      id: 64,
-      name: "Bánh Canh Cua",
-      image: "https://picsum.photos/200/200?5",
-      region: "Nam",
-      type: "Tại chỗ",
-      price: "50.000đ/tô",
-    },
-    {
-      id: 65,
-      name: "Kẹo Dừa Bến Tre",
-      image: "https://picsum.photos/200/200?6",
-      region: "Nam",
-      type: "khô",
-      price: "50.000đ/hộp",
-    },
-  ];
-
-  // Lọc sản phẩm
-  let filteredProducts = products;
-  if (selectedRegion !== "Tất cả") {
-    filteredProducts = products.filter((p) => p.region === selectedRegion);
-    if (subCategory)
-      filteredProducts = filteredProducts.filter((p) => p.type === subCategory);
-  }
-
   // Tính toán phân trang
-  const totalItems = filteredProducts.length;
+  const totalItems = products.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+  const currentProducts = products.slice(startIndex, endIndex);
 
   // Reset về trang 1 khi thay đổi vùng hoặc danh mục con
   useEffect(() => {
@@ -695,12 +172,20 @@ const Products = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: "smooth" }); // Cuộn lên đầu trang
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 relative" ref={dropdownRef}>
+      {/* Trạng thái loading */}
+      {loading && (
+        <p className="text-center text-gray-500 mt-8">
+          Đang tải sản phẩm... (⁠*⁠´⁠ω⁠｀⁠*⁠) :33333
+        </p>
+      )}
+      {/* Trạng thái lỗi */}
+      {error && <p className="text-center text-red-500 mt-8">{error}</p>}
       {/* SIDEBAR - desktop */}
       <div
         className={`hidden md:block w-1/4 h-[calc(100vh-5rem)] p-5 fixed left-0 overflow-y-auto transition-all duration-300 ${
@@ -859,9 +344,18 @@ const Products = () => {
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition"
             >
               <img
-                src={product.image}
+                src={getImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-40 md:h-48 object-cover"
+                onError={(e) => {
+                  // Nếu ảnh tĩnh lỗi, thử ảnh động
+                  e.currentTarget.src = product.image
+                    ? product.image.replace(
+                        "/img-produce/",
+                        "http://localhost:4000/uploads/"
+                      )
+                    : "/img-produce/default.jpg";
+                }}
               />
               <div className="p-3 md:p-4">
                 <h3 className="font-semibold text-sm md:text-lg mb-1 md:mb-2">
@@ -885,9 +379,9 @@ const Products = () => {
           ))}
         </div>
 
-        {currentProducts.length === 0 && (
+        {currentProducts.length === 0 && !loading && (
           <p className="text-gray-500 mt-8 text-center">
-            Không có sản phẩm nào phù hợp.
+            Không có sản phẩm nào phù hợp. (⁠ꏿ⁠﹏⁠ꏿ⁠;⁠) :33333
           </p>
         )}
 
