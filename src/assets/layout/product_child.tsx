@@ -665,7 +665,9 @@ const Products = () => {
         {regions.map((r) => (
           <div key={r.name} className="flex-shrink-0">
             <button
-              ref={(el) => (buttonRefs.current[r.name] = el)}
+              ref={(el) => {
+                buttonRefs.current[r.name] = el;
+              }}
               onClick={() => {
                 setMobileOpen(mobileOpen === r.name ? null : r.name);
               }}
