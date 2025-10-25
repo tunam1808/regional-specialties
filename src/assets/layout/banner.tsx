@@ -12,7 +12,7 @@ import banner_child_eight from "@/assets/images/images-home/huê.jpg";
 import banner_child_nine from "@/assets/images/images-home/benthanh.jpg";
 
 import banner_child_ten from "@/assets/images/images-home/HANOI.jpg";
-import banner_child_hi from "@/assets/images/images-home/Du-lich-mien-Nam-thang-1-2.jpg";
+import banner_child_hi from "@/assets/images/images-home/images.jpeg";
 import banner_child_ha from "@/assets/images/images-home/thuyen.jpg";
 
 // Kiểu dữ liệu cho banner
@@ -76,7 +76,7 @@ export default function Banner() {
         <img
           src={active.bgBlur}
           alt="background blur"
-          className="w-full h-auto opacity-90 blur-sm scale-105 transition-all duration-700 object-cover"
+          className="w-full h-auto opacity-100 blur-[1px] scale-100 transition-all duration-700 object-cover"
         />
       </div>
 
