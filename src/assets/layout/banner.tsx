@@ -4,32 +4,36 @@ import banner_child_one from "@/assets/images/images-home/lapxuong.jpg";
 import banner_child_two from "@/assets/images/images-home/cudo.png";
 import banner_child_three from "@/assets/images/images-home/banh-duc-la-dua.jpg";
 
+import banner_child_four from "@/assets/images/images-home/com.jpg";
+import banner_child_five from "@/assets/images/images-home/nem.jpg";
+import banner_child_six from "@/assets/images/images-home/keo.png";
+import banner_child_seven from "@/assets/images/images-home/bacthang.webp";
+import banner_child_eight from "@/assets/images/images-home/huê.jpg";
+import banner_child_nine from "@/assets/images/images-home/benthanh.jpg";
+
+import banner_child_ten from "@/assets/images/images-home/HANOI.jpg";
+import banner_child_hi from "@/assets/images/images-home/Du-lich-mien-Nam-thang-1-2.jpg";
+import banner_child_ha from "@/assets/images/images-home/thuyen.jpg";
+
 // Kiểu dữ liệu cho banner
 interface BannerType {
   id: number;
   bg: string;
+  bgBlur: string;
   link: string; // đường dẫn đến trang sản phẩm
+  title: string; // tên sản phẩm/đặc sản
 }
 
 export default function Banner() {
   const navigate = useNavigate();
 
   const banners: BannerType[] = [
-    {
-      id: 1,
-      bg: banner_child_one,
-      link: "/products ", // ví dụ đường dẫn đến sản phẩm
-    },
-    {
-      id: 2,
-      bg: banner_child_two,
-      link: "/products",
-    },
-    {
-      id: 3,
-      bg: banner_child_three,
-      link: "/products",
-    },
+    { id: 1, bg: banner_child_one, bgBlur: banner_child_seven, link: "/products", title: "Lạp Xưởng" },
+    { id: 2, bg: banner_child_two, bgBlur: banner_child_eight, link: "/products", title: "Cù Đơ" },
+    { id: 3, bg: banner_child_three, bgBlur: banner_child_nine, link: "/products", title: "Bánh Đúc Lá Dứa" },
+    { id: 4, bg: banner_child_four, bgBlur: banner_child_ten, link: "/products", title: "Cốm Hà Nội" },
+    { id: 5, bg: banner_child_five, bgBlur: banner_child_hi, link: "/products", title: "Nem Chua" },
+    { id: 6, bg: banner_child_six, bgBlur: banner_child_ha, link: "/products", title: "Kẹo Dừa" },
   ];
 
   const [active, setActive] = useState<BannerType>(banners[0]);
@@ -48,16 +52,17 @@ export default function Banner() {
   // 🕒 Tự động chuyển banner sau 3s
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextIndex =
-        (banners.findIndex((b) => b.id === active.id) + 1) % banners.length;
       setFade(false);
       setTimeout(() => {
-        setActive(banners[nextIndex]);
+        setActive((prev) => {
+          const nextIndex = (banners.findIndex((b) => b.id === prev.id) + 1) % banners.length;
+          return banners[nextIndex];
+        });
         setFade(true);
       }, 300);
     }, 3000);
     return () => clearInterval(interval);
-  }, [active]);
+  }, []);
 
   // 👉 Khi click banner chính => sang trang sản phẩm
   const handleClickBanner = () => {
@@ -69,9 +74,9 @@ export default function Banner() {
       {/* Nền mờ */}
       <div className="absolute inset-0 -z-10 flex justify-center">
         <img
-          src={active.bg}
+          src={active.bgBlur}
           alt="background blur"
-          className="w-full h-auto opacity-70 blur-md scale-105 transition-all duration-700 object-cover"
+          className="w-full h-auto opacity-90 blur-sm scale-105 transition-all duration-700 object-cover"
         />
       </div>
 
@@ -86,10 +91,10 @@ export default function Banner() {
           width: "clamp(220px, 55%, 800px)",
         }}
       >
-        {/* Có thể thêm text quảng cáo nếu muốn */}
+        {/* Text quảng cáo */}
         <div className="absolute inset-0 bg-black/25 rounded-2xl flex items-center justify-center">
           <p className="text-white text-lg md:text-2xl font-semibold drop-shadow-lg">
-            Khám phá đặc sản {active.id === 1 ? "Lạp Xưởng" : active.id === 2 ? "Cù Đơ" : "Bánh Đúc Lá Dứa"}
+            Khám phá đặc sản {active.title}
           </p>
         </div>
       </div>

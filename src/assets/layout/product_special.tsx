@@ -11,7 +11,7 @@ import Thit from "@/assets/images/images-home/thit-trau.jpg";
 import Muc from "@/assets/images/images-home/muc.jpg";
 import Com from "@/assets/images/images-home/com.jpg";
 import Tet from "@/assets/images/images-home/Cach-lam-banh-tet-la-cam.jpg";
-import Cacao from "@/assets/images/images-home/572b556865ced7908edf1.jpg";
+import Keo from "@/assets/images/images-home/keo.png";
 import Hat from "@/assets/images/images-home/hatdieu.jpg";
 
 const products = [
@@ -61,10 +61,10 @@ const products = [
   },
   {
     id: 7,
-    name: "Bột Cacao nguyên chất ",
-    description: "Thơm nồng, giàu chất chống oxy hóa, tốt cho sức khỏe.",
-    price: "220.000đ",
-    image: Cacao,
+    name: "Kẹo dừa Bến Tre ",
+    description: "Hoà quyện nước cốt dừa và mạch nha, tạo nên những viên kẹo vị ngọt nhẹ.",
+    price: "120.000đ",
+    image: Keo,
   },
   {
     id: 8,
