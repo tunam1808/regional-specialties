@@ -166,11 +166,17 @@ const ManageProducts = () => {
       return;
     }
 
+    const giaSauGiam =
+      formData.giaBan && formData.voucher
+        ? (Number(formData.giaBan) * (100 - Number(formData.voucher))) / 100
+        : Number(formData.giaBan) || 0;
+
     const sanPham: SanPham = {
       TenSP: formData.tenSP,
       MoTa: formData.moTa || undefined,
       GiaNhap: formData.giaNhap ? Number(formData.giaNhap) : undefined,
       GiaBan: formData.giaBan ? Number(formData.giaBan) : 0,
+      GiaSauGiam: giaSauGiam,
       SoLuongTon: formData.soLuongTon ? Number(formData.soLuongTon) : undefined,
       DaBan: formData.daBan ? Number(formData.daBan) : undefined,
       Voucher: formData.voucher ? `${Number(formData.voucher)}%` : undefined,
@@ -315,7 +321,9 @@ const ManageProducts = () => {
     <div className="p-6 bg-gray-200 min-h-screen">
       {/* Header với nút thêm sản phẩm */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-700">Quản lý sản phẩm</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-green-700 text-center sm:text-left w-full mb-6 sm:mb-0">
+          Quản lý sản phẩm
+        </h1>
         <Button
           onClick={handleOpenAddModal}
           className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 flex items-center gap-2"
@@ -611,8 +619,23 @@ const ManageProducts = () => {
                       )}
                     </td>
                     <td className="px-4 py-2">
-                      {Number(product.GiaBan).toLocaleString()}₫
+                      {product.Voucher ? (
+                        <>
+                          <span className="line-through text-gray-400 mr-2">
+                            {Number(product.GiaBan).toLocaleString()}₫
+                          </span>
+                          <span className="text-green-600 font-semibold">
+                            {Number(
+                              product.GiaSauGiam ?? product.GiaBan
+                            ).toLocaleString()}
+                            ₫
+                          </span>
+                        </>
+                      ) : (
+                        `${Number(product.GiaBan).toLocaleString()}₫`
+                      )}
                     </td>
+
                     <td className="px-4 py-2">
                       {["Bắc", "Trung", "Nam"].includes(
                         product.VungMien as string

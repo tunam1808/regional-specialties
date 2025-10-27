@@ -5,6 +5,7 @@ export interface SanPham {
   HinhAnh?: string;
   GiaNhap?: number;
   GiaBan: number;
+  GiaSauGiam?: number;
   SoLuongTon?: number;
   DaBan?: number;
   DanhGiaTrungBinh?: number;
@@ -24,6 +25,7 @@ export interface SanPham {
 }
 
 export interface Product {
+  voucher: any;
   id: number;
   name: string;
   image: string;

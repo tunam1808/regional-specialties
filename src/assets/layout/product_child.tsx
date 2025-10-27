@@ -28,13 +28,6 @@ const Products = () => {
     { name: "Nam", sub: ["Tại chỗ", "Đồ khô"], apiValue: "nam" },
   ];
 
-  // Hàm format giá
-  const formatPrice = (price: number, type: string): string => {
-    const formattedPrice = price.toLocaleString("vi-VN");
-    const unit = type === "Tại chỗ" ? "/đĩa" : "/hộp";
-    return `${formattedPrice}đ${unit}`;
-  };
-
   // Chuyển đổi đường dẫn ảnh
   const getImageUrl = (hinhAnh: string | undefined) => {
     if (!hinhAnh) return "/img-produce/default.jpg";
@@ -65,14 +58,22 @@ const Products = () => {
             ? "Đồ khô"
             : undefined;
         const data = await getAllSanPham(regionApiValue, subCategoryApiValue);
-        const formattedProducts: Product[] = data.map((item: SanPham) => ({
-          id: item.MaSP || 0,
-          name: item.TenSP,
-          image: item.HinhAnh || "/img-produce/default.jpg",
-          region: item.VungMien || "bac",
-          type: item.LoaiDoAn || "Đồ khô",
-          price: formatPrice(item.GiaBan, item.LoaiDoAn || "Đồ khô"),
-        }));
+        const formattedProducts: Product[] = data.map((item: SanPham) => {
+          const giaSauVoucher = item.Voucher
+            ? item.GiaBan * (1 - parseFloat(item.Voucher) / 100)
+            : item.GiaBan;
+
+          return {
+            id: item.MaSP || 0,
+            name: item.TenSP,
+            image: item.HinhAnh || "/img-produce/default.jpg",
+            region: item.VungMien || "bac",
+            type: item.LoaiDoAn || "Đồ khô",
+            price: giaSauVoucher,
+            voucher: item.Voucher || "",
+          };
+        });
+
         setProducts(formattedProducts);
       } catch (err) {
         setError("Không thể tải sản phẩm, xin thử lại sau! (⁠╥⁠﹏⁠╥⁠) :33333");
@@ -341,8 +342,14 @@ const Products = () => {
           {currentProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition"
+              className="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition"
             >
+              {/* Hiển thị % giảm giá ở góc trên bên phải */}
+              {product.voucher && (
+                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs md:text-sm font-semibold px-2 py-1 rounded-lg shadow-md">
+                  -{product.voucher}
+                </span>
+              )}
               <img
                 src={getImageUrl(product.image)}
                 alt={product.name}
@@ -358,10 +365,13 @@ const Products = () => {
                 }}
               />
               <div className="p-3 md:p-4">
-                <h3 className="font-semibold text-sm md:text-lg mb-1 md:mb-2">
+                <h3 className="font-semibold text-xl md:text-lg mb-1 md:mb-2">
                   {product.name}
                 </h3>
-                <p className="text-slate-700 text-sm mb-2">{product.price}</p>
+                <p className="text-red-600 text-xl font-bold mb-2">
+                  {Number(product.price).toLocaleString("vi-VN")}đ
+                </p>
+
                 <div className="flex items-center gap-2">
                   <button className="flex-1 bg-slate-700 text-white px-3 py-2 rounded-lg hover:bg-slate-800 text-sm">
                     Mua ngay
@@ -381,7 +391,7 @@ const Products = () => {
 
         {currentProducts.length === 0 && !loading && (
           <p className="text-gray-500 mt-8 text-center">
-            Không có sản phẩm nào phù hợp. (⁠ꏿ⁠﹏⁠ꏿ⁠;⁠) :33333
+            Không có sản phẩm nào phù hợp.
           </p>
         )}
 
