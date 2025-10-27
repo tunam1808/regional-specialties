@@ -114,7 +114,11 @@ export default function Header() {
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 <img
-                  src={user.avatar || avt}
+                  src={
+                    user?.avatar
+                      ? `${import.meta.env.VITE_BASE_SERVER}${user.avatar}`
+                      : avt
+                  }
                   alt="avatar"
                   className="w-10 h-10 rounded-full object-cover"
                 />

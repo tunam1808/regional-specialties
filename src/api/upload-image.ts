@@ -2,38 +2,43 @@
 import api from "./axiosInstance";
 
 /**
- * Upload avatar file + cập nhật DB
- * @param file File ảnh từ input
- * @param userId ID người dùng
- * @returns string - URL đầy đủ của ảnh đã upload
+ * Upload avatar của người dùng
+ * @param file File ảnh (từ input type="file")
+ * @param userId ID người dùng (tùy chọn – BE có thể tự lấy từ token)
+ * @returns string - Đường dẫn URL ảnh đã upload
  */
 export const uploadAvatar = async (
   file: File,
-  userId: number
+  userId?: number
 ): Promise<string> => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("userId", userId.toString());
+  if (!file) throw new Error("Không có file để upload!");
 
-  console.log("📤 Bắt đầu upload:", file.name);
+  const formData = new FormData();
+  formData.append("avatar", file);
+  if (userId) formData.append("userId", userId.toString());
+
+  console.log("📤 Upload avatar:", file.name);
 
   try {
-    const res = await api.post("/upload", formData, {
+    const res = await api.post("/upload/avatar", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    // Nếu server không trả url → ném lỗi
+    // ✅ Kiểm tra phản hồi từ server
     if (!res.data?.url) {
       throw new Error(res.data?.message || "Upload thất bại!");
     }
 
-    console.log("✅ BE trả về URL:", res.data.url);
-    return res.data.url;
+    console.log("✅ Ảnh upload thành công:", res.data.url);
+    return res.data.url; // Ví dụ: "/avatars/user_1730055555.jpg"
   } catch (err: any) {
-    // Nếu token hết hạn hoặc lỗi 401 → ném lỗi để frontend bắt
-    if (err.response?.status === 401) {
-      throw new Error("Unauthorized: Phiên đăng nhập hết hạn");
+    console.error("❌ Lỗi upload avatar:", err);
+
+    // 👉 Token hết hạn đã được axiosInstance xử lý, chỉ ném lỗi khác
+    if (err.response?.status === 400) {
+      throw new Error(err.response.data?.message || "File không hợp lệ!");
     }
-    throw err;
+
+    throw new Error("Lỗi khi upload ảnh, vui lòng thử lại!");
   }
 };

@@ -31,5 +31,5 @@ export interface Product {
   image: string;
   region: string;
   type: string;
-  price: string;
+  price: number;
 }

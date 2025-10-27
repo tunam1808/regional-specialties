@@ -311,7 +311,13 @@ export default function Profile() {
               <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2">
                 <div className="relative group">
                   <img
-                    src={user.avatar || avt}
+                    src={
+                      user.avatar
+                        ? user.avatar.startsWith("http")
+                          ? user.avatar
+                          : `${import.meta.env.VITE_BASE_SERVER}${user.avatar}`
+                        : avt
+                    }
                     alt="Avatar"
                     className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover transition-transform duration-300 group-hover:scale-105"
                   />

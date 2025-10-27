@@ -11,6 +11,7 @@ import {
 } from "@/components/table";
 import { Button } from "@/components/button";
 import { FaPlus, FaUser, FaUserShield } from "react-icons/fa";
+import avt from "@/assets/images/default.jpg";
 import {
   Dialog,
   DialogContent,
@@ -305,7 +306,13 @@ export default function AdminUsers() {
                   <TableCell>
                     {user.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={
+                          user.avatar
+                            ? `${import.meta.env.VITE_BASE_SERVER}${
+                                user.avatar
+                              }`
+                            : avt
+                        }
                         alt="avatar"
                         className="w-8 h-8 rounded-full"
                       />
@@ -361,7 +368,13 @@ export default function AdminUsers() {
                   <TableCell>
                     {user.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={
+                          user.avatar
+                            ? `${import.meta.env.VITE_BASE_SERVER}${
+                                user.avatar
+                              }`
+                            : avt
+                        }
                         alt="avatar"
                         className="w-8 h-8 rounded-full"
                       />

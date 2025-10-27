@@ -141,27 +141,49 @@ const ManageProducts = () => {
 
     // Validation
     if (!formData.tenSP) {
-      setError("Vui lòng nhập tên sản phẩm! ");
+      showError("Vui lòng nhập tên sản phẩm! ");
       setLoading(false);
       return;
     }
     if (!formData.giaBan || Number(formData.giaBan) <= 0) {
-      setError("Giá bán phải lớn hơn 0! ");
+      showError("Giá bán phải lớn hơn 0! ");
+      setLoading(false);
+      return;
+    }
+    if (
+      formData.giaNhap &&
+      Number(formData.giaNhap) > Number(formData.giaBan)
+    ) {
+      showError("Giá nhập không được lớn hơn giá bán!");
       setLoading(false);
       return;
     }
     if (!formData.vungMien) {
-      setError("Vui lòng chọn vùng miền! ");
+      showError("Vui lòng chọn vùng miền! ");
       setLoading(false);
       return;
     }
     if (!formData.loaiDoAn) {
-      setError("Vui lòng chọn loại đồ ăn! ");
+      showError("Vui lòng chọn loại đồ ăn! ");
       setLoading(false);
       return;
     }
     if (formData.voucher && Number(formData.voucher) > 100) {
-      setError("Voucher không được lớn hơn 100%! ");
+      showError("Voucher không được lớn hơn 100%! ");
+      setLoading(false);
+      return;
+    }
+    if (!formData.soLuongTon || Number(formData.soLuongTon) <= 0) {
+      showError("Số lượng tồn phải lớn hơn 0!");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      formData.daBan &&
+      Number(formData.soLuongTon) < Number(formData.daBan)
+    ) {
+      showError("Số lượng tồn phải lớn hơn hoặc bằng số lượng đã bán!");
       setLoading(false);
       return;
     }

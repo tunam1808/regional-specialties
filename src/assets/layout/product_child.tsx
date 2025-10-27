@@ -76,7 +76,7 @@ const Products = () => {
 
         setProducts(formattedProducts);
       } catch (err) {
-        setError("Không thể tải sản phẩm, xin thử lại sau! (⁠╥⁠﹏⁠╥⁠) :33333");
+        setError("Không thể tải sản phẩm, xin thử lại sau!");
       } finally {
         setLoading(false);
       }
