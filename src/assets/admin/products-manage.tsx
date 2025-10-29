@@ -12,10 +12,17 @@ import {
   updateSanPham,
   deleteSanPham,
 } from "@/api/product";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog";
 import type { SanPham } from "@/types/product.type";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/button";
 import { showSuccess, showError } from "@/common/toast";
+import MyEditor from "@/components/editor";
 
 interface Product {
   tenSP: string;
@@ -53,6 +60,7 @@ const ManageProducts = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SanPham | null>(null);
 
   // Lấy danh sách sản phẩm
   useEffect(() => {
@@ -406,12 +414,11 @@ const ManageProducts = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Mô tả</label>
-                <textarea
-                  name="moTa"
+                <MyEditor
                   value={formData.moTa}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full border rounded-lg p-2 focus:ring focus:ring-green-200"
+                  onChange={(value: string) =>
+                    setFormData((prev) => ({ ...prev, moTa: value }))
+                  }
                 />
               </div>
 
@@ -683,7 +690,7 @@ const ManageProducts = () => {
                       </Button>
                       <Button
                         className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        onClick={() => handleDelete(product.MaSP!)}
+                        onClick={() => setDeleteTarget(product)}
                       >
                         <FaTrash />
                       </Button>
@@ -695,6 +702,41 @@ const ManageProducts = () => {
           </div>
         )}
       </div>
+      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-red-600">
+              Xóa sản phẩm
+            </DialogTitle>
+            <p className="text-sm text-gray-500 mt-2">
+              Bạn có chắc muốn xóa{" "}
+              <span className="font-semibold text-gray-800">
+                {deleteTarget?.TenSP}
+              </span>{" "}
+              khỏi danh sách không? Hành động này không thể hoàn tác.
+            </p>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              className="px-4"
+            >
+              Hủy
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white px-4"
+              onClick={() => {
+                if (deleteTarget) handleDelete(deleteTarget.MaSP!);
+                setDeleteTarget(null);
+              }}
+            >
+              Xóa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

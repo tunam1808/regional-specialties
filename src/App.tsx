@@ -39,7 +39,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/account-infor" element={<Profile />} />{" "}
-        <Route path="/product-detail" element={<ProductDetail />} />
+        {/*Chi tiết sản phẩm theo ID */}
+        <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
         {/*Trang quản lý của admin */}
         <Route path="/manage-page" element={<AdminPage />}>

@@ -71,6 +71,8 @@ const Products = () => {
             type: item.LoaiDoAn || "Đồ khô",
             price: giaSauVoucher,
             voucher: item.Voucher || "",
+            soLuongTon: item.SoLuongTon ?? 0,
+            daBan: item.DaBan ?? 0,
           };
         });
 
@@ -175,6 +177,30 @@ const Products = () => {
       setCurrentPage(page);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  // 🛒 Hàm thêm sản phẩm vào giỏ hàng
+  const handleAddToCart = (product: Product) => {
+    const savedCart = localStorage.getItem("cart");
+    const cart = savedCart ? JSON.parse(savedCart) : [];
+
+    const existing = cart.find((item: any) => item.id === product.id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    // Tuỳ chọn: thông báo thêm thành công
+    alert(`✅ Đã thêm "${product.name}" vào giỏ hàng!`);
   };
 
   return (
@@ -342,20 +368,21 @@ const Products = () => {
           {currentProducts.map((product) => (
             <div
               key={product.id}
-              className="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition"
+              className="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition cursor-pointer"
+              onClick={() => navigate(`/product/${product.id}`)} // 👈 Thêm chuyển hướng ở đây
             >
-              {/* Hiển thị % giảm giá ở góc trên bên phải */}
+              {/* Hiển thị % giảm giá */}
               {product.voucher && (
                 <span className="absolute top-2 right-2 bg-red-500 text-white text-xs md:text-sm font-semibold px-2 py-1 rounded-lg shadow-md">
                   -{product.voucher}
                 </span>
               )}
+
               <img
                 src={getImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-40 md:h-48 object-cover"
                 onError={(e) => {
-                  // Nếu ảnh tĩnh lỗi, thử ảnh động
                   e.currentTarget.src = product.image
                     ? product.image.replace(
                         "/img-produce/",
@@ -364,22 +391,50 @@ const Products = () => {
                     : "/img-produce/default.jpg";
                 }}
               />
+
               <div className="p-3 md:p-4">
                 <h3 className="font-semibold text-xl md:text-lg mb-1 md:mb-2">
                   {product.name}
                 </h3>
+
                 <p className="text-red-600 text-xl font-bold mb-2">
                   {Number(product.price).toLocaleString("vi-VN")}đ
                 </p>
 
+                <div className="flex justify-between text-sm text-gray-600 mb-2 space-y-1">
+                  <p>
+                    Kho:{" "}
+                    <span className="font-semibold text-gray-800">
+                      {product.soLuongTon}
+                    </span>
+                  </p>
+                  <p>
+                    Đã bán:{" "}
+                    <span className="font-semibold text-gray-800">
+                      {product.daBan}
+                    </span>
+                  </p>
+                </div>
+
                 <div className="flex items-center gap-2">
-                  <button className="flex-1 bg-slate-700 text-white px-3 py-2 rounded-lg hover:bg-slate-800 text-sm">
+                  {/* 🟢 Mua ngay → chuyển đến trang chi tiết */}
+                  <button
+                    className="flex-1 bg-slate-700 text-white px-3 py-2 rounded-lg hover:bg-slate-800 text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Ngăn card click
+                      navigate(`/product/${product.id}`);
+                    }}
+                  >
                     Mua ngay
                   </button>
 
+                  {/* 🟢 Thêm vào giỏ hàng */}
                   <Button
                     className="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition"
-                    onClick={() => navigate("/cart")}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Ngăn card click
+                      handleAddToCart(product);
+                    }}
                   >
                     <FaShoppingCart size={18} />
                   </Button>

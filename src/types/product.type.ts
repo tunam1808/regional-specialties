@@ -32,4 +32,6 @@ export interface Product {
   region: string;
   type: string;
   price: number;
+  soLuongTon?: number;
+  daBan?: number;
 }
