@@ -492,7 +492,11 @@ const ManageProducts = () => {
 
               {giaSauGiam !== null && (
                 <div className="text-sm text-gray-600">
-                  Giá sau giảm: {giaSauGiam.toLocaleString()} ₫
+                  Giá sau giảm:{" "}
+                  {giaSauGiam.toLocaleString("vi-VN", {
+                    maximumFractionDigits: 0,
+                  })}{" "}
+                  ₫
                 </div>
               )}
 
@@ -651,17 +655,24 @@ const ManageProducts = () => {
                       {product.Voucher ? (
                         <>
                           <span className="line-through text-gray-400 mr-2">
-                            {Number(product.GiaBan).toLocaleString()}₫
+                            {Number(product.GiaBan).toLocaleString("vi-VN", {
+                              maximumFractionDigits: 0,
+                            })}
+                            ₫
                           </span>
                           <span className="text-green-600 font-semibold">
                             {Number(
                               product.GiaSauGiam ?? product.GiaBan
-                            ).toLocaleString()}
+                            ).toLocaleString("vi-VN", {
+                              maximumFractionDigits: 0,
+                            })}
                             ₫
                           </span>
                         </>
                       ) : (
-                        `${Number(product.GiaBan).toLocaleString()}₫`
+                        `${Number(product.GiaBan).toLocaleString("vi-VN", {
+                          maximumFractionDigits: 0,
+                        })}₫`
                       )}
                     </td>
 

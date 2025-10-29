@@ -398,7 +398,10 @@ const Products = () => {
                 </h3>
 
                 <p className="text-red-600 text-xl font-bold mb-2">
-                  {Number(product.price).toLocaleString("vi-VN")}đ
+                  {Number(product.price).toLocaleString("vi-VN", {
+                    maximumFractionDigits: 0,
+                  })}
+                  đ
                 </p>
 
                 <div className="flex justify-between text-sm text-gray-600 mb-2 space-y-1">

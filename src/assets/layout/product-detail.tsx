@@ -99,25 +99,36 @@ export default function ProductDetail() {
             <div>
               <div>
                 <span className="text-2xl text-red-600 font-bold mr-3">
-                  {product.GiaSauGiam.toLocaleString("vi-VN")}₫
+                  <span className="text-2xl text-red-600 font-bold mr-3">
+                    {Number(
+                      product.GiaSauGiam || product.GiaBan
+                    ).toLocaleString("vi-VN", { maximumFractionDigits: 0 })}
+                    ₫
+                  </span>
                 </span>
                 <span className="text-gray-500 line-through">
-                  {product.GiaBan.toLocaleString("vi-VN")}₫
+                  {Number(product.GiaBan).toLocaleString("vi-VN", {
+                    maximumFractionDigits: 0,
+                  })}
+                  ₫
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-1">
                 Tiết kiệm:{" "}
                 <span className="text-green-600 font-semibold">
-                  {(product.GiaBan - product.GiaSauGiam).toLocaleString(
-                    "vi-VN"
-                  )}
+                  {Number(
+                    product.GiaBan - (product.GiaSauGiam || 0)
+                  ).toLocaleString("vi-VN", { maximumFractionDigits: 0 })}
                   ₫
                 </span>
               </p>
             </div>
           ) : (
             <span className="text-2xl text-green-700 font-bold">
-              {product.GiaBan.toLocaleString("vi-VN")}₫
+              {product.GiaBan.toLocaleString("vi-VN", {
+                maximumFractionDigits: 0,
+              })}
+              ₫
             </span>
           )}
         </div>
