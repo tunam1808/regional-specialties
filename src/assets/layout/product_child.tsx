@@ -31,14 +31,17 @@ const Products = () => {
   // Chuyển đổi đường dẫn ảnh
   const getImageUrl = (hinhAnh: string | undefined) => {
     if (!hinhAnh) return "/img-produce/default.jpg";
-    // Thử ảnh tĩnh trước (localhost:5000/img-produce/)
-    const staticImageUrl = hinhAnh; // /img-produce/ten-anh.jpg
-    // Nếu ảnh tĩnh không tồn tại, dùng ảnh động (localhost:4000/uploads/)
-    // const dynamicImageUrl = hinhAnh.replace(
-    //   "/img-produce/",
-    //   "http://localhost:4000/uploads/"
-    // );
-    return staticImageUrl; // Mặc định trả về static, kiểm tra lỗi trong <img>
+    if (hinhAnh.startsWith("http://") || hinhAnh.startsWith("https://"))
+      return hinhAnh;
+    if (
+      hinhAnh.startsWith("/img-produce") ||
+      hinhAnh.startsWith("/img-introduce")
+    )
+      return hinhAnh;
+
+    const baseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    return `${baseUrl}${hinhAnh}`;
   };
 
   // Lấy dữ liệu từ API
@@ -383,12 +386,7 @@ const Products = () => {
                 alt={product.name}
                 className="w-full h-40 md:h-48 object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = product.image
-                    ? product.image.replace(
-                        "/img-produce/",
-                        "http://localhost:4000/uploads/"
-                      )
-                    : "/img-produce/default.jpg";
+                  e.currentTarget.src = "/img-produce/default.jpg"; // fallback khi ảnh lỗi
                 }}
               />
 
@@ -467,7 +465,6 @@ const Products = () => {
             >
               Trước
             </button>
-
             {Array.from({ length: totalPages }, (_, index) => index + 1).map(
               (page) => (
                 <button
@@ -483,7 +480,6 @@ const Products = () => {
                 </button>
               )
             )}
-
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -495,6 +491,7 @@ const Products = () => {
             >
               Sau
             </button>
+            git
           </div>
         )}
       </div>

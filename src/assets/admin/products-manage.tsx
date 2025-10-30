@@ -82,7 +82,24 @@ const ManageProducts = () => {
   // Chuyển đổi đường dẫn ảnh
   const getImageUrl = (hinhAnh: string | undefined) => {
     if (!hinhAnh) return "/img-produce/default.jpg";
-    return hinhAnh;
+
+    // Nếu là URL đầy đủ (http/https), trả về nguyên
+    if (hinhAnh.startsWith("http://") || hinhAnh.startsWith("https://")) {
+      return hinhAnh;
+    }
+
+    // Nếu là ảnh static frontend (bắt đầu bằng /img-introduce hoặc /img-produce)
+    if (
+      hinhAnh.startsWith("/img-introduce") ||
+      hinhAnh.startsWith("/img-produce")
+    ) {
+      return hinhAnh;
+    }
+
+    // Nếu là ảnh upload trên backend
+    const baseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    return `${baseUrl}${hinhAnh}`;
   };
 
   // Xử lý thay đổi form
@@ -121,8 +138,9 @@ const ManageProducts = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        const imageUrl = res.data.url.replace("/uploads/", "/img-produce/");
+        const imageUrl = res.data.url;
         setFormData((prev) => ({ ...prev, hinhAnh: imageUrl }));
+
         showSuccess("Upload ảnh thành công! ");
       } catch (err: unknown) {
         console.error("Lỗi upload:", err);
@@ -256,16 +274,15 @@ const ManageProducts = () => {
 
   // Xử lý xóa sản phẩm
   const handleDelete = async (MaSP: number) => {
-    if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này?")) return;
     setLoading(true);
     setError(null);
     setSuccess(null);
     try {
       await deleteSanPham(MaSP);
-      showSuccess("Xóa sản phẩm thành công! ");
+      showSuccess("Xóa sản phẩm thành công!");
       setProducts(products.filter((p) => p.MaSP !== MaSP));
     } catch {
-      showError("Lỗi khi xóa sản phẩm! ");
+      showError("Lỗi khi xóa sản phẩm!");
     } finally {
       setLoading(false);
     }
@@ -578,12 +595,8 @@ const ManageProducts = () => {
                     alt="Preview"
                     className="mt-2 w-32 h-32 object-cover rounded"
                     onError={(e) => {
-                      e.currentTarget.src = formData.hinhAnh
-                        ? formData.hinhAnh.replace(
-                            "/img-produce/",
-                            "http://localhost:4000/uploads/"
-                          )
-                        : "/img-produce/default.jpg";
+                      // fallback nếu URL lỗi
+                      e.currentTarget.src = "/img-produce/default.jpg";
                     }}
                   />
                 )}
@@ -638,12 +651,7 @@ const ManageProducts = () => {
                           alt={product.TenSP}
                           className="w-16 h-16 object-cover rounded"
                           onError={(e) => {
-                            e.currentTarget.src = product.HinhAnh
-                              ? product.HinhAnh.replace(
-                                  "/img-produce/",
-                                  "http://localhost:4000/uploads/"
-                                )
-                              : "/img-produce/default.jpg";
+                            e.currentTarget.src = "/img-produce/default.jpg"; // fallback mặc định
                           }}
                         />
                       ) : (
