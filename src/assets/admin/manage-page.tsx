@@ -32,10 +32,8 @@ export default function AdminLayout() {
 
       {/* 🔹 SIDEBAR */}
       <aside
-        className={`bg-green-700 text-white flex flex-col w-64 md:h-screen md:fixed md:top-0 md:left-0 z-40 transition-transform duration-300
-        ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } md:flex`}
+        className={`fixed top-0 left-0 h-full w-64 bg-green-700 text-white flex flex-col z-40 transform transition-transform duration-300
+  ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <div className="p-4 text-2xl font-bold border-b border-green-500 text-center relative">
           Admin Page
