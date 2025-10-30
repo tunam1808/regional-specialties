@@ -34,10 +34,10 @@ const Products = () => {
     // Thử ảnh tĩnh trước (localhost:5000/img-produce/)
     const staticImageUrl = hinhAnh; // /img-produce/ten-anh.jpg
     // Nếu ảnh tĩnh không tồn tại, dùng ảnh động (localhost:4000/uploads/)
-    const dynamicImageUrl = hinhAnh.replace(
-      "/img-produce/",
-      "http://localhost:4000/uploads/"
-    );
+    // const dynamicImageUrl = hinhAnh.replace(
+    //   "/img-produce/",
+    //   "http://localhost:4000/uploads/"
+    // );
     return staticImageUrl; // Mặc định trả về static, kiểm tra lỗi trong <img>
   };
 
