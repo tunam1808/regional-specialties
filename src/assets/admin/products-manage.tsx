@@ -366,13 +366,13 @@ const ManageProducts = () => {
   return (
     <div className="p-6 bg-gray-200 min-h-screen">
       {/* Header với nút thêm sản phẩm */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-green-700 text-center sm:text-left w-full mb-6 sm:mb-0">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-green-700 text-center sm:text-left w-full mb-10 sm:mb-0">
           Quản lý sản phẩm
         </h1>
         <Button
           onClick={handleOpenAddModal}
-          className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 flex items-center gap-2"
+          className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <FaPlusCircle /> Thêm sản phẩm
         </Button>
@@ -619,15 +619,16 @@ const ManageProducts = () => {
       )}
 
       {/* Danh sách sản phẩm */}
-      <div className="bg-white rounded-2xl shadow p-6">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+      <div className="bg-white rounded-none sm:rounded-2xl shadow py-6 -mx-6 sm:mx-0">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700 px-4 sm:px-6">
           Danh sách sản phẩm
         </h2>
+
         {products.length === 0 && !loading ? (
-          <p className="text-gray-500">Không có sản phẩm nào!</p>
+          <p className="text-gray-500 px-4 sm:px-6">Không có sản phẩm nào!</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto">
+          <div className="overflow-x-auto px-0 sm:px-6">
+            <table className="min-w-full table-auto">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="px-4 py-2 text-left">Mã SP</th>
@@ -649,9 +650,9 @@ const ManageProducts = () => {
                         <img
                           src={getImageUrl(product.HinhAnh)}
                           alt={product.TenSP}
-                          className="w-16 h-16 object-cover rounded"
+                          className="w-16 h-16 object-cover rounded sm:rounded-none"
                           onError={(e) => {
-                            e.currentTarget.src = "/img-produce/default.jpg"; // fallback mặc định
+                            e.currentTarget.src = "/img-produce/default.jpg";
                           }}
                         />
                       ) : (
