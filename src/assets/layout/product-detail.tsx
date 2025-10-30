@@ -72,6 +72,14 @@ export default function ProductDetail() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div className="col-span-full -mb-4">
+        <Button
+          className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-lg flex items-center gap-2"
+          onClick={() => navigate(-1)}
+        >
+          ← Quay lại
+        </Button>
+      </div>
       {/* Ảnh sản phẩm */}
       <div>
         <img
