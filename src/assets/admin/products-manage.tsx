@@ -80,25 +80,29 @@ const ManageProducts = () => {
   }, []);
 
   // Chuyển đổi đường dẫn ảnh
-  const getImageUrl = (hinhAnh: string | undefined) => {
+  const getImageUrl = (hinhAnh?: string | null) => {
+    // 1. Nếu không có ảnh, dùng ảnh default frontend
     if (!hinhAnh) return "/img-produce/default.jpg";
 
-    // Nếu là URL đầy đủ (http/https), trả về nguyên
+    // 2. Nếu URL đã đầy đủ, trả về nguyên
     if (hinhAnh.startsWith("http://") || hinhAnh.startsWith("https://")) {
       return hinhAnh;
     }
 
-    // Nếu là ảnh static frontend (bắt đầu bằng /img-introduce hoặc /img-produce)
+    // 3. Nếu là ảnh static frontend
     if (
-      hinhAnh.startsWith("/img-introduce") ||
-      hinhAnh.startsWith("/img-produce")
+      hinhAnh.startsWith("/img-produce") ||
+      hinhAnh.startsWith("/img-introduce")
     ) {
       return hinhAnh;
     }
 
-    // Nếu là ảnh upload trên backend
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    // 4. Nếu là ảnh upload từ backend, concat base URL
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (!baseUrl) {
+      console.error("VITE_API_BASE_URL chưa set!");
+      return "/img-produce/default.jpg";
+    }
     return `${baseUrl}${hinhAnh}`;
   };
 
