@@ -70,7 +70,7 @@ const ManageProducts = () => {
       try {
         const data = await getAllSanPham();
         setProducts(data);
-      } catch (err) {
+      } catch {
         showError("Lỗi khi lấy danh sách sản phẩm!");
       } finally {
         setLoading(false);
@@ -124,14 +124,13 @@ const ManageProducts = () => {
         const imageUrl = res.data.url.replace("/uploads/", "/img-produce/");
         setFormData((prev) => ({ ...prev, hinhAnh: imageUrl }));
         showSuccess("Upload ảnh thành công! ");
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Lỗi upload:", err);
+        const e = err as any;
         showError(
           `Lỗi khi upload ảnh! ${
-            err.response?.data?.message ||
-            err.response?.data?.error ||
-            err.message
-          } `
+            e.response?.data?.message || e.response?.data?.error || e.message
+          }`
         );
       }
     }
@@ -248,7 +247,7 @@ const ManageProducts = () => {
       });
       setEditingProduct(null);
       setIsModalOpen(false);
-    } catch (err) {
+    } catch {
       showError("Lỗi khi xử lý sản phẩm! ");
     } finally {
       setLoading(false);
@@ -265,7 +264,7 @@ const ManageProducts = () => {
       await deleteSanPham(MaSP);
       showSuccess("Xóa sản phẩm thành công! ");
       setProducts(products.filter((p) => p.MaSP !== MaSP));
-    } catch (err) {
+    } catch {
       showError("Lỗi khi xóa sản phẩm! ");
     } finally {
       setLoading(false);
