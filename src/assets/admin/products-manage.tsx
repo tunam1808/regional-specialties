@@ -81,15 +81,14 @@ const ManageProducts = () => {
 
   // Chuyển đổi đường dẫn ảnh
   const getImageUrl = (hinhAnh?: string | null) => {
-    // 1. Nếu không có ảnh, dùng ảnh default frontend
     if (!hinhAnh) return "/img-produce/default.jpg";
 
-    // 2. Nếu URL đã đầy đủ, trả về nguyên
+    // Nếu đã là URL đầy đủ (backend trả về)
     if (hinhAnh.startsWith("http://") || hinhAnh.startsWith("https://")) {
       return hinhAnh;
     }
 
-    // 3. Nếu là ảnh static frontend
+    // Nếu là ảnh static frontend
     if (
       hinhAnh.startsWith("/img-produce") ||
       hinhAnh.startsWith("/img-introduce")
@@ -97,13 +96,8 @@ const ManageProducts = () => {
       return hinhAnh;
     }
 
-    // 4. Nếu là ảnh upload từ backend, concat base URL
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    if (!baseUrl) {
-      console.error("VITE_API_BASE_URL chưa set!");
-      return "/img-produce/default.jpg";
-    }
-    return `${baseUrl}${hinhAnh}`;
+    // Fallback: nếu không đúng format
+    return "/img-produce/default.jpg";
   };
 
   // Xử lý thay đổi form
@@ -127,34 +121,39 @@ const ManageProducts = () => {
   // Xử lý upload ảnh
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("Token không hợp lệ! Vui lòng đăng nhập lại. ");
-          return;
-        }
-        const formData = new FormData();
-        formData.append("image", file);
-        const res = await api.post("/imgproduct/imgproduct", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const imageUrl = res.data.url;
-        setFormData((prev) => ({ ...prev, hinhAnh: imageUrl }));
+    if (!file) return;
 
-        showSuccess("Upload ảnh thành công! ");
-      } catch (err: unknown) {
-        console.error("Lỗi upload:", err);
-        const e = err as any;
-        showError(
-          `Lỗi khi upload ảnh! ${
-            e.response?.data?.message || e.response?.data?.error || e.message
-          }`
-        );
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showError("Token không hợp lệ! Vui lòng đăng nhập lại.");
+        return;
       }
+
+      const formDataImg = new FormData();
+      formDataImg.append("image", file);
+
+      // Gửi lên backend
+      const res = await api.post("/imgproduct/imgproduct", formDataImg, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Backend trả về url đầy đủ luôn
+      const imageUrl = res.data.url;
+      setFormData((prev) => ({ ...prev, hinhAnh: imageUrl }));
+
+      showSuccess("Upload ảnh thành công!");
+    } catch (err: unknown) {
+      console.error("Lỗi upload:", err);
+      const e = err as any;
+      showError(
+        `Lỗi khi upload ảnh! ${
+          e.response?.data?.message || e.response?.data?.error || e.message
+        }`
+      );
     }
   };
 
