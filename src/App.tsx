@@ -13,11 +13,12 @@ import NavToContact from "@/assets/small-function/nav-to-contact";
 import Voucher from "@/assets/mini-component/voucher-wheel";
 import Profile from "@/assets/mini-component/account-infor";
 import ProductDetail from "@/assets/layout/product-detail";
-import Cart from "@/assets/mini-component/cart";
 import AdminPage from "@/assets/admin/manage-page";
 import AccountManage from "@/assets/admin/account-manage";
 import FeedbackManage from "@/assets/admin/feedback-manage";
 import ProductsManage from "@/assets/admin/products-manage";
+import Cart from "@/assets/mini-component/cart-page"
+
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/about" element={<About />} />
         <Route path="/news" element={<News />} />
+        
         <Route path="/faq" element={<FAQ />} />
         <Route path="/shipping_policy" element={<ShippingPolicy />} />
         <Route path="/return_policy" element={<ReturnPolicy />} />
@@ -41,7 +43,8 @@ export default function App() {
         <Route path="/account-infor" element={<Profile />} />{" "}
         {/*Chi tiết sản phẩm theo ID */}
         <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/cart-page" element={<Cart />} />
+
         {/*Trang quản lý của admin */}
         <Route path="/manage-page" element={<AdminPage />}>
           <Route index element={<AccountManage />} />
