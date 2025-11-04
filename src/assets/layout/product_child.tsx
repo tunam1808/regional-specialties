@@ -4,7 +4,10 @@ import { createPortal } from "react-dom";
 import { FaChevronDown, FaShoppingCart } from "react-icons/fa";
 import { Button } from "@/components/button";
 import { getAllSanPham } from "@/api/product";
+import { getProfile } from "@/api/get-profile";
+import { addProductToCart } from "@/api/order-detail"; // ← THÊM API THẬT
 import type { SanPham, Product } from "@/types/product.type";
+import { showSuccess, showError } from "@/common/toast";
 
 const Products = () => {
   const [selectedRegion, setSelectedRegion] = useState("Tất cả");
@@ -15,11 +18,12 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: number } | null>(null); // ← LẤY TỪ API
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [isSticky, setIsSticky] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(30); // Mặc định là desktop
+  const [itemsPerPage, setItemsPerPage] = useState(30);
   const navigate = useNavigate();
 
   const regions = [
@@ -28,23 +32,20 @@ const Products = () => {
     { name: "Nam", sub: ["Tại chỗ", "Đồ khô"], apiValue: "nam" },
   ];
 
-  // Chuyển đổi đường dẫn ảnh
-  const getImageUrl = (hinhAnh: string | undefined) => {
-    if (!hinhAnh) return "/img-produce/default.jpg";
-    if (hinhAnh.startsWith("http://") || hinhAnh.startsWith("https://"))
-      return hinhAnh;
-    if (
-      hinhAnh.startsWith("/img-produce") ||
-      hinhAnh.startsWith("/img-introduce")
-    )
-      return hinhAnh;
+  // Lấy thông tin user từ API (JWT)
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const profile = await getProfile();
+        setUser({ id: profile.id });
+      } catch (err) {
+        setUser(null);
+      }
+    };
+    fetchUser();
+  }, []);
 
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
-    return `${baseUrl}${hinhAnh}`;
-  };
-
-  // Lấy dữ liệu từ API
+  // Lấy sản phẩm
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -89,22 +90,17 @@ const Products = () => {
     fetchProducts();
   }, [selectedRegion, subCategory]);
 
-  // Kiểm tra kích thước màn hình để đặt itemsPerPage
+  // Responsive itemsPerPage
   useEffect(() => {
     const updateItemsPerPage = () => {
-      if (window.innerWidth < 768) {
-        setItemsPerPage(20); // Mobile
-      } else {
-        setItemsPerPage(30); // Desktop
-      }
+      setItemsPerPage(window.innerWidth < 768 ? 20 : 30);
     };
-
     updateItemsPerPage();
     window.addEventListener("resize", updateItemsPerPage);
     return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
-  // Đóng dropdown khi click ra ngoài
+  // Đóng dropdown khi click ngoài
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -118,7 +114,7 @@ const Products = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Cập nhật vị trí dropdown khi scroll hoặc resize
+  // Cập nhật vị trí dropdown
   useEffect(() => {
     const updatePosition = () => {
       if (mobileOpen && buttonRefs.current[mobileOpen]) {
@@ -131,14 +127,10 @@ const Products = () => {
       }
     };
 
-    const handleScroll = () => {
-      if (mobileOpen) setMobileOpen(null);
-    };
-
+    const handleScroll = () => setMobileOpen(null);
     window.addEventListener("scroll", updatePosition);
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", updatePosition);
-
     updatePosition();
 
     return () => {
@@ -148,33 +140,22 @@ const Products = () => {
     };
   }, [mobileOpen]);
 
-  // Xử lý sticky sidebar
+  // Sticky sidebar
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        setIsSticky(true);
-      } else {
-        setIsSticky(false);
-      }
-    };
-
+    const handleScroll = () => setIsSticky(window.scrollY > 100);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Tính toán phân trang
+  // Phân trang
   const totalItems = products.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentProducts = products.slice(startIndex, endIndex);
 
-  // Reset về trang 1 khi thay đổi vùng hoặc danh mục con
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedRegion, subCategory]);
+  useEffect(() => setCurrentPage(1), [selectedRegion, subCategory]);
 
-  // Xử lý chuyển trang
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -182,40 +163,57 @@ const Products = () => {
     }
   };
 
-  // 🛒 Hàm thêm sản phẩm vào giỏ hàng
-  const handleAddToCart = (product: Product) => {
-    const savedCart = localStorage.getItem("cart");
-    const cart = savedCart ? JSON.parse(savedCart) : [];
-
-    const existing = cart.find((item: any) => item.id === product.id);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        quantity: 1,
-      });
+  // THÊM VÀO GIỎ HÀNG THẬT
+  const handleAddToCart = async (product: Product) => {
+    if (!user?.id) {
+      alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+      navigate("/login");
+      return;
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    if (product.soLuongTon <= 0) {
+      alert("Sản phẩm đã hết hàng!");
+      return;
+    }
 
-    // Tuỳ chọn: thông báo thêm thành công
-    alert(`✅ Đã thêm "${product.name}" vào giỏ hàng!`);
+    try {
+      await addProductToCart({
+        MaSP: product.id,
+        SoLuong: 1,
+        GiaBanTaiThoiDiem: product.price,
+        GhiChu: "",
+      });
+
+      showSuccess(`Đã thêm "${product.name}" vào giỏ hàng!`);
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Không thể thêm vào giỏ!";
+      showError(msg);
+    }
+  };
+
+  const getImageUrl = (hinhAnh: string | undefined) => {
+    if (!hinhAnh) return "/img-produce/default.jpg";
+    if (hinhAnh.startsWith("http")) return hinhAnh;
+    if (
+      hinhAnh.startsWith("/img-produce") ||
+      hinhAnh.startsWith("/img-introduce")
+    )
+      return hinhAnh;
+
+    const baseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    return `${baseUrl}${hinhAnh}`;
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 relative" ref={dropdownRef}>
-      {/* Trạng thái loading */}
       {loading && (
         <p className="text-center text-gray-500 mt-8">
           Đang tải sản phẩm... (⁠*⁠´⁠ω⁠｀⁠*⁠) :33333
         </p>
       )}
-      {/* Trạng thái lỗi */}
       {error && <p className="text-center text-red-500 mt-8">{error}</p>}
+
       {/* SIDEBAR - desktop */}
       <div
         className={`hidden md:block w-1/4 h-[calc(100vh-5rem)] p-5 fixed left-0 overflow-y-auto transition-all duration-300 ${
@@ -247,7 +245,7 @@ const Products = () => {
               }
               className={`flex justify-between items-center w-full text-left px-4 py-2 rounded-md transition ${
                 selectedRegion === r.name
-                  ? "bg-slate-700 text-white"
+                  ? "bg-slate--700 text-white"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -306,12 +304,10 @@ const Products = () => {
         {regions.map((r) => (
           <div key={r.name} className="flex-shrink-0">
             <button
-              ref={(el) => {
-                buttonRefs.current[r.name] = el;
-              }}
-              onClick={() => {
-                setMobileOpen(mobileOpen === r.name ? null : r.name);
-              }}
+              ref={(el) => (buttonRefs.current[r.name] = el)}
+              onClick={() =>
+                setMobileOpen(mobileOpen === r.name ? null : r.name)
+              }
               className={`flex items-center gap-1 font-medium ${
                 selectedRegion === r.name
                   ? "text-orange-600"
@@ -330,7 +326,7 @@ const Products = () => {
         ))}
       </div>
 
-      {/* Dropdown con - mobile */}
+      {/* Dropdown mobile */}
       {mobileOpen &&
         createPortal(
           <div
@@ -357,7 +353,7 @@ const Products = () => {
           document.body
         )}
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <div className="flex-1 px-2 md:px-4 py-6 md:ml-[25%] mt-8 md:-mt-2">
         <h2 className="text-2xl font-semibold mb-6">
           {selectedRegion === "Tất cả"
@@ -372,9 +368,8 @@ const Products = () => {
             <div
               key={product.id}
               className="relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition cursor-pointer"
-              onClick={() => navigate(`/product/${product.id}`)} // 👈 Thêm chuyển hướng ở đây
+              onClick={() => navigate(`/product/${product.id}`)}
             >
-              {/* Hiển thị % giảm giá */}
               {product.voucher && (
                 <span className="absolute top-2 right-2 bg-red-500 text-white text-xs md:text-sm font-semibold px-2 py-1 rounded-lg shadow-md">
                   -{product.voucher}
@@ -386,7 +381,7 @@ const Products = () => {
                 alt={product.name}
                 className="w-full h-40 md:h-48 object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = "/img-produce/default.jpg"; // fallback khi ảnh lỗi
+                  e.currentTarget.src = "/img-produce/default.jpg";
                 }}
               />
 
@@ -402,7 +397,7 @@ const Products = () => {
                   đ
                 </p>
 
-                <div className="flex justify-between text-sm text-gray-600 mb-2 space-y-1">
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
                   <p>
                     Kho:{" "}
                     <span className="font-semibold text-gray-800">
@@ -418,24 +413,22 @@ const Products = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* 🟢 Mua ngay → chuyển đến trang chi tiết */}
                   <button
                     className="flex-1 bg-slate-700 text-white px-3 py-2 rounded-lg hover:bg-slate-800 text-sm"
                     onClick={(e) => {
-                      e.stopPropagation(); // Ngăn card click
+                      e.stopPropagation();
                       navigate(`/product/${product.id}`);
                     }}
                   >
                     Mua ngay
                   </button>
 
-                  {/* 🟢 Thêm vào giỏ hàng */}
                   <Button
-                    className="bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition"
                     onClick={(e) => {
-                      e.stopPropagation(); // Ngăn card click
+                      e.stopPropagation();
                       handleAddToCart(product);
                     }}
+                    disabled={product.soLuongTon === 0}
                   >
                     <FaShoppingCart size={18} />
                   </Button>
@@ -465,21 +458,19 @@ const Products = () => {
             >
               Trước
             </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === page
-                      ? "bg-slate-700 text-white"
-                      : "bg-gray-200 hover:bg-gray-300"
-                  }`}
-                >
-                  {page}
-                </button>
-              )
-            )}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === page
+                    ? "bg-slate-700 text-white"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -491,7 +482,6 @@ const Products = () => {
             >
               Sau
             </button>
-            git
           </div>
         )}
       </div>
