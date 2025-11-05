@@ -17,8 +17,8 @@ import AdminPage from "@/assets/admin/manage-page";
 import AccountManage from "@/assets/admin/account-manage";
 import FeedbackManage from "@/assets/admin/feedback-manage";
 import ProductsManage from "@/assets/admin/products-manage";
-import Cart from "@/assets/mini-component/cart-page"
-
+import Cart from "@/assets/mini-component/cart-page";
+import Checkout from "./assets/mini-component/checkout";
 
 export default function App() {
   return (
@@ -33,7 +33,6 @@ export default function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/about" element={<About />} />
         <Route path="/news" element={<News />} />
-        
         <Route path="/faq" element={<FAQ />} />
         <Route path="/shipping_policy" element={<ShippingPolicy />} />
         <Route path="/return_policy" element={<ReturnPolicy />} />
@@ -44,7 +43,7 @@ export default function App() {
         {/*Chi tiết sản phẩm theo ID */}
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart-page" element={<Cart />} />
-
+        <Route path="/checkout" element={<Checkout />} />
         {/*Trang quản lý của admin */}
         <Route path="/manage-page" element={<AdminPage />}>
           <Route index element={<AccountManage />} />

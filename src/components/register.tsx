@@ -87,12 +87,12 @@ function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Mật khẩu và xác nhận mật khẩu không khớp! ");
+      showError("Mật khẩu và xác nhận mật khẩu không khớp! ");
       return;
     }
 
     if (!agree) {
-      alert("Bạn phải đồng ý với điều khoản sử dụng.");
+      showError("Bạn phải đồng ý với điều khoản sử dụng.");
       return;
     }
 

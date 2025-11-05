@@ -14,10 +14,11 @@ import {
   deleteProductFromCart,
   addProductToCart,
 } from "@/api/order-detail";
-import { checkoutCart } from "@/api/order";
+
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "@/api/get-profile";
 import { showSuccess, showError } from "@/common/toast";
+// import { checkoutCart } from "@/api/order"; // sẽ chuyển sang trang checkout
 
 interface ProductType {
   MaSP: number;
@@ -138,38 +139,58 @@ const Cart: React.FC = () => {
       .reduce((sum, i) => sum + i.SoLuong * i.GiaBanTaiThoiDiem, 0);
   }, [cartItems]);
 
-  // Thanh toán
-  const handleCheckout = async () => {
-    if (!user?.id) {
-      showError("Vui lòng đăng nhập!");
-      navigate("/login");
-      return;
-    }
-
+  const handleCheckout = () => {
     const selected = cartItems.filter((i) => i.checked);
     if (selected.length === 0) {
       showError("Chưa chọn sản phẩm!");
       return;
     }
 
-    const confirmMsg = `Thanh toán ${
-      selected.length
-    } sản phẩm, tổng ${totalPrice.toLocaleString()}₫?`;
-    if (!confirm(confirmMsg)) return;
+    // 🔹 Lưu tạm danh sách sản phẩm được chọn vào localStorage
+    const checkoutItems = selected.map((item) => ({
+      id: item.MaSP,
+      name: item.TenSP,
+      price: item.GiaBanTaiThoiDiem,
+      quantity: item.SoLuong,
+      hinhAnh: item.HinhAnh,
+    }));
+    localStorage.setItem("cart_checkout", JSON.stringify(checkoutItems));
 
-    try {
-      const res = await checkoutCart({
-        PhuongThucThanhToan: "Tiền mặt",
-        DiaChiGiaoHang: "Nhập tại quầy",
-        GhiChu: "",
-      });
-
-      showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
-      setCartItems((prev) => prev.filter((i) => !i.checked));
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Thanh toán thất bại!");
-    }
+    navigate("/checkout");
   };
+
+  // Thanh toán
+  // const handleCheckout = async () => {
+  //   if (!user?.id) {
+  //     showError("Vui lòng đăng nhập!");
+  //     navigate("/login");
+  //     return;
+  //   }
+
+  //   const selected = cartItems.filter((i) => i.checked);
+  //   if (selected.length === 0) {
+  //     showError("Chưa chọn sản phẩm!");
+  //     return;
+  //   }
+
+  //   const confirmMsg = `Thanh toán ${
+  //     selected.length
+  //   } sản phẩm, tổng ${totalPrice.toLocaleString()}₫?`;
+  //   if (!confirm(confirmMsg)) return;
+
+  //   try {
+  //     const res = await checkoutCart({
+  //       PhuongThucThanhToan: "Tiền mặt",
+  //       DiaChiGiaoHang: "Nhập tại quầy",
+  //       GhiChu: "",
+  //     });
+
+  //     showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
+  //     setCartItems((prev) => prev.filter((i) => !i.checked));
+  //   } catch (err: any) {
+  //     showError(err.response?.data?.message || "Thanh toán thất bại!");
+  //   }
+  // };
 
   const getImageUrl = (hinhAnh: string | undefined) => {
     if (!hinhAnh) return "/img-produce/default.jpg";

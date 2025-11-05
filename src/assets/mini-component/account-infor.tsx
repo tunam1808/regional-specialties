@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
 
-// import các file gọi API
+// import API
 import { getProfile } from "@/api/get-profile";
 import { updateUser } from "@/api/update-user";
 import { uploadAvatar } from "@/api/upload-image";
-import { getProvinces, getDistricts, getWards } from "@/api/address";
+import { getProvinces, getWards } from "@/api/address";
 
-// import các file định nghĩa kiểu (Interface)
-import type { Province, District, Ward } from "@/types/address.type";
+// import types
 import type { User } from "@/types/guest.type";
 
-// import ảnh nền
+// import assets
 import backgroundImage from "@/assets/images/bg.jpg";
 import avt from "@/assets/images/default.jpg";
 
@@ -27,7 +26,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-// Thêm CSS cho background và viền
+// CSS (giữ nguyên)
 const backgroundStyles = `
   .profile-background {
     background-image: url(${backgroundImage});
@@ -43,49 +42,24 @@ const backgroundStyles = `
   .profile-background::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.5); 
     z-index: 0;
   }
 
-  .profile-content {
-    position: relative;
-    z-index: 10;
-    background: transparent;
-    padding: 1.5rem;
-  }
-
-  .profile-card {
-    border: 5px solid #4f46e5; 
-  }
+  .profile-content { position: relative; z-index: 10; padding: 1.5rem; }
+  .profile-card { border: 5px solid #4f46e5; }
 
   .back-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1.5rem;
-    background-color: #4f46e5; /* Màu giống các button khác */
-    color: white;
-    border-radius: 0.75rem;
-    font-weight: 500;
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1.5rem; background-color: #4f46e5; color: white;
+    border-radius: 0.75rem; font-weight: 500;
     transition: background-color 0.3s, transform 0.2s;
   }
-
-  .back-button:hover {
-    background-color: #4338ca; /* Hiệu ứng hover */
-    transform: translateY(-1px);
-  }
+  .back-button:hover { background-color: #4338ca; transform: translateY(-1px); }
 
   @media (max-width: 640px) {
-    .profile-background {
-      padding: 1rem;
-    }
-    .profile-content {
-      padding: 1rem;
-    }
+    .profile-background, .profile-content { padding: 1rem; }
   }
 `;
 
@@ -94,93 +68,128 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [wards, setWards] = useState<Ward[]>([]);
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
+
   const [formData, setFormData] = useState<{
     SoDienThoai?: string;
     TinhThanh?: string;
-    QuanHuyen?: string;
+    TinhThanhCode?: string;
     PhuongXa?: string;
+    PhuongXaCode?: string;
     DiaChiChiTiet?: string;
   }>({});
+
   const navigate = useNavigate();
 
-  // Lấy dữ liệu người dùng
+  // === 1. LẤY USER ===
   useEffect(() => {
+    console.log("🔄 [LOG] Bắt đầu load profile...");
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
-
     if (!token) {
+      console.log("❌ [LOG] Không có token → redirect login");
       setLoading(false);
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      setTimeout(() => navigate("/login"), 2000);
       return;
     }
 
     getProfile()
       .then((data) => {
         const u = data.user || data;
+        console.log("✅ [LOG] Load user thành công:", {
+          fullname: u.fullname || u.HoTen,
+          TinhThanh: u.TinhThanh,
+          PhuongXa: u.PhuongXa,
+        });
         setUser({ ...u, id: Number(u.id) });
         setFormData({
           SoDienThoai: u.SoDienThoai || "",
           TinhThanh: u.TinhThanh || "",
-          QuanHuyen: u.QuanHuyen || "",
           PhuongXa: u.PhuongXa || "",
           DiaChiChiTiet: u.DiaChi ?? "",
         });
       })
-      .catch(() => {
-        showError("⏳ Phiên đăng nhập đã hết hạn!");
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+      .catch((err) => {
+        console.error("❌ [LOG] Lỗi load profile:", err);
+        showError("Phiên đăng nhập đã hết hạn!");
+        setTimeout(() => navigate("/login"), 2000);
         setUser(null);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        console.log("🔄 [LOG] Kết thúc load profile");
+        setLoading(false);
+      });
+  }, [navigate]);
 
-  // Lấy danh sách tỉnh khi bật chế độ chỉnh sửa
+  // === 2. LOAD PROVINCES ===
   useEffect(() => {
-    if (editing) {
+    if (user || editing) {
+      console.log("🚀 [FRONTEND] Bắt đầu load provinces...");
       getProvinces()
-        .then((data) => setProvinces(data))
-        .catch((err) => console.error("Lỗi tải tỉnh:", err));
+        .then((data) => {
+          console.log("🌟 [FRONTEND] getProvinces() trả về:", data);
+          if (Array.isArray(data) && data.length > 0) {
+            console.log("✅ [FRONTEND] Tải tỉnh thành công:", data.length);
+            setProvinces(data);
+          } else {
+            console.warn("⚠️ [FRONTEND] Provinces rỗng");
+            setProvinces([]);
+          }
+        })
+        .catch((err) => {
+          console.error("❌ [FRONTEND] Lỗi API provinces:", err);
+          setProvinces([]);
+        });
     }
-  }, [editing]);
+  }, [user, editing]);
 
-  // Khi chọn tỉnh → load danh sách huyện
+  // === 3. TỰ ĐỘNG SET TinhThanhCode KHI CÓ TỈNH ===
   useEffect(() => {
-    if (formData.TinhThanh) {
-      const selected = provinces.find((p) => p.name === formData.TinhThanh);
-      if (selected)
-        getDistricts(selected.code)
-          .then((data) => setDistricts(data))
-          .catch((err) => console.error("Lỗi tải huyện:", err));
-    } else setDistricts([]);
-  }, [formData.TinhThanh, provinces]);
+    if (provinces.length > 0 && formData.TinhThanh && !formData.TinhThanhCode) {
+      const prov = provinces.find((p) => p.name === formData.TinhThanh);
+      if (prov) {
+        console.log("✅ [LOG] Auto set TinhThanhCode:", prov.idProvince);
+        setFormData((prev) => ({
+          ...prev,
+          TinhThanhCode: prov.idProvince,
+        }));
+      }
+    }
+  }, [provinces, formData.TinhThanh]);
 
-  // Khi chọn huyện → load danh sách xã
+  // === 4. LOAD PHƯỜNG/XÃ KHI CÓ TỈNH ===
   useEffect(() => {
-    if (formData.QuanHuyen) {
-      const selected = districts.find((d) => d.name === formData.QuanHuyen);
-      if (selected)
-        getWards(selected.code)
-          .then((data) => setWards(data))
-          .catch((err) => console.error("Lỗi tải xã:", err));
-    } else setWards([]);
-  }, [districts, formData.QuanHuyen]);
+    if (formData.TinhThanhCode) {
+      console.log("🚀 [LOG] Load wards cho tỉnh:", formData.TinhThanhCode);
+      getWards(formData.TinhThanhCode)
+        .then((data) => {
+          if (Array.isArray(data)) {
+            console.log("✅ [LOG] Wards loaded:", data.length);
+            setWards(data);
+          } else {
+            setWards([]);
+          }
+        })
+        .catch((err) => {
+          console.error("❌ [LOG] Lỗi getWards:", err);
+          setWards([]);
+        });
+    } else {
+      setWards([]);
+    }
+  }, [formData.TinhThanhCode]);
 
-  if (loading) return <p className="text-center mt-10">⏳ Đang tải...</p>;
-  if (!user) {
+  // === RENDER LOADING / ERROR ===
+  if (loading) return <p className="text-center mt-10">Đang tải...</p>;
+  if (!user)
     return (
       <p className="text-center mt-10 text-gray-500">
-        Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.
+        Không tìm thấy thông tin người dùng.
       </p>
     );
-  }
 
+  // === LOGOUT ===
   const handleLogout = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -189,25 +198,32 @@ export default function Profile() {
     showSuccess("Đã đăng xuất thành công!");
   };
 
+  // === CẬP NHẬT ===
   const handleUpdate = async () => {
+    console.log("💾 [LOG] Bắt đầu update với payload:", formData);
+    if (!user?.id) return;
+    if (!formData.SoDienThoai || !/^\d{10,11}$/.test(formData.SoDienThoai)) {
+      alert("Số điện thoại phải là 10-11 chữ số!");
+      return;
+    }
+    if (
+      !formData.DiaChiChiTiet ||
+      formData.DiaChiChiTiet.length < 5 ||
+      formData.DiaChiChiTiet.length > 200
+    ) {
+      alert("Địa chỉ chi tiết phải từ 5-200 ký tự!");
+      return;
+    }
+
+    const payload = {
+      SoDienThoai: formData.SoDienThoai,
+      TinhThanh: formData.TinhThanh,
+      PhuongXa: formData.PhuongXa,
+      DiaChiChiTiet: formData.DiaChiChiTiet,
+    };
+
     try {
-      if (!user?.id) return;
-
-      if (!formData.SoDienThoai || !/^\d{10,11}$/.test(formData.SoDienThoai)) {
-        alert("Số điện thoại phải là 10-11 chữ số!");
-        return;
-      }
-      if (
-        !formData.DiaChiChiTiet ||
-        formData.DiaChiChiTiet.length < 5 ||
-        formData.DiaChiChiTiet.length > 200
-      ) {
-        alert("Địa chỉ chi tiết phải từ 5-200 ký tự!");
-        return;
-      }
-
-      const updated = await updateUser(user.id.toString(), formData);
-
+      const updated = await updateUser(user.id.toString(), payload);
       setUser((prev) =>
         prev
           ? {
@@ -217,75 +233,51 @@ export default function Profile() {
             }
           : prev
       );
-
       setEditing(false);
-      showSuccess("Cập nhật thông tin thành công!");
+      showSuccess("Cập nhật thành công!");
     } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || "Không xác định";
-
-      if (
-        msg.includes("Token không tồn tại") ||
-        msg.includes("Phiên đăng nhập hết hạn") ||
-        msg.includes("Unauthorized")
-      ) {
-        showError("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+      console.error("❌ [LOG] Lỗi update:", err);
+      const msg = err.response?.data?.message || err.message || "Lỗi";
+      if (msg.includes("Token") || msg.includes("hết hạn")) {
+        showError("Phiên đăng nhập đã hết hạn!");
         setTimeout(() => {
           localStorage.clear();
           sessionStorage.clear();
           navigate("/login");
         }, 2000);
       } else {
-        showError("Lỗi khi cập nhật: " + msg);
-        setTimeout(() => {
-          localStorage.clear();
-          sessionStorage.clear();
-          navigate("/login");
-        }, 2000);
+        showError("Lỗi cập nhật: " + msg);
       }
     }
   };
 
+  // === UPLOAD AVATAR ===
   const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id) {
-      showError("Chưa chọn file hoặc chưa đăng nhập!");
-      return;
-    }
+    if (!file || !user?.id) return showError("Chưa chọn file!");
 
     try {
       setUploading(true);
       const uploadedUrl = await uploadAvatar(file, user.id);
-
-      if (!uploadedUrl) throw new Error("Upload thất bại!");
-
       const finalUrl = `${uploadedUrl}?v=${Date.now()}`;
-
       setUser((prev) => {
         if (!prev) return prev;
         const updated = { ...prev, avatar: finalUrl };
         localStorage.setItem("user", JSON.stringify(updated));
         return updated;
       });
-
-      showSuccess("Ảnh đại diện đã được cập nhật!");
+      showSuccess("Cập nhật ảnh thành công!");
     } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || "Không xác định";
-
-      if (
-        msg.includes("Token không tồn tại") ||
-        msg.includes("Phiên đăng nhập hết hạn") ||
-        msg.includes("Unauthorized")
-      ) {
-        showError("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!");
+      const msg = err.response?.data?.message || err.message;
+      if (msg.includes("Token") || msg.includes("hết hạn")) {
+        showError("Phiên đăng nhập đã hết hạn!");
         setTimeout(() => {
           localStorage.clear();
           sessionStorage.clear();
           navigate("/login");
         }, 2000);
       } else {
-        showError("Lỗi upload ảnh: " + msg);
+        showError("Lỗi upload: " + msg);
       }
     } finally {
       e.target.value = "";
@@ -293,19 +285,18 @@ export default function Profile() {
     }
   };
 
+  // === RENDER ===
   return (
     <>
       <style>{backgroundStyles}</style>
       <div className="profile-background">
         <div className="max-w-3xl mx-auto p-6 profile-content">
-          {/* Back button */}
           <button onClick={() => navigate(-1)} className="mb-6 back-button">
             <FaArrowLeft /> Quay lại
           </button>
 
-          {/* Profile Card */}
           <div className="bg-gradient-to-b from-indigo-50 to-purple-50 rounded-3xl shadow-xl overflow-hidden profile-card">
-            {/* Cover + Avatar */}
+            {/* Avatar */}
             <div className="relative">
               <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
               <div className="absolute left-1/2 -bottom-16 transform -translate-x-1/2">
@@ -338,7 +329,7 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* User Info */}
+            {/* Info */}
             <div className="pt-20 text-center px-6">
               <h2 className="text-3xl font-bold text-gray-800">
                 {user.fullname || user.HoTen}
@@ -359,7 +350,6 @@ export default function Profile() {
             {/* Details */}
             <div className="px-6 py-6 text-gray-700 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Ngày tham gia */}
                 <div className="p-4 bg-white rounded-xl shadow hover:shadow-md transition">
                   <div className="flex items-center gap-2 font-medium text-indigo-500">
                     <FaCalendarAlt /> Tham gia
@@ -370,7 +360,6 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* SĐT */}
                 <div className="p-4 bg-white rounded-xl shadow hover:shadow-md transition">
                   <div className="flex items-center gap-2 font-medium text-green-500">
                     <FaPhoneAlt /> SĐT
@@ -378,14 +367,14 @@ export default function Profile() {
                   {editing ? (
                     <input
                       type="text"
-                      value={formData.SoDienThoai}
+                      value={formData.SoDienThoai || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           SoDienThoai: e.target.value,
                         })
                       }
-                      className="mt-2 w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                      className="mt-2 w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
                     />
                   ) : (
                     <div className="mt-1">
@@ -402,67 +391,68 @@ export default function Profile() {
                 </div>
                 {editing ? (
                   <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Tỉnh/Thành */}
+                    {/* TỈNH */}
                     <select
-                      value={formData.TinhThanh}
-                      onChange={(e) =>
+                      value={formData.TinhThanh || ""}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const prov = provinces.find((p) => p.name === name);
+                        console.log(
+                          "🎯 [LOG] Chọn tỉnh:",
+                          name,
+                          "→ Code:",
+                          prov?.idProvince
+                        );
                         setFormData({
                           ...formData,
-                          TinhThanh: e.target.value,
-                          QuanHuyen: "",
+                          TinhThanh: name,
+                          TinhThanhCode: prov?.idProvince || "", // ← DÙNG idProvince
                           PhuongXa: "",
-                        })
-                      }
-                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                          PhuongXaCode: "",
+                        });
+                      }}
+                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
                     >
                       <option value="">-- Chọn Tỉnh/Thành --</option>
                       {provinces.map((p) => (
-                        <option key={p.code} value={p.name}>
+                        <option key={p.idProvince} value={p.name}>
                           {p.name}
                         </option>
                       ))}
                     </select>
 
-                    {/* Quận/Huyện */}
+                    {/* PHƯỜNG/XÃ */}
                     <select
-                      value={formData.QuanHuyen}
-                      onChange={(e) =>
+                      value={formData.PhuongXa || ""}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const ward = wards.find((w) => w.name === name);
+                        console.log(
+                          "🎯 [LOG] Chọn xã:",
+                          name,
+                          "→ Code:",
+                          ward?.id
+                        );
                         setFormData({
                           ...formData,
-                          QuanHuyen: e.target.value,
-                          PhuongXa: "",
-                        })
-                      }
-                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
-                    >
-                      <option value="">-- Chọn Quận/Huyện --</option>
-                      {districts.map((d) => (
-                        <option key={d.code} value={d.name}>
-                          {d.name}
-                        </option>
-                      ))}
-                    </select>
-
-                    {/* Phường/Xã */}
-                    <select
-                      value={formData.PhuongXa}
-                      onChange={(e) =>
-                        setFormData({ ...formData, PhuongXa: e.target.value })
-                      }
-                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                          PhuongXa: name,
+                          PhuongXaCode: ward?.id || "", // ← DÙNG id
+                        });
+                      }}
+                      className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
                     >
                       <option value="">-- Chọn Phường/Xã --</option>
                       {wards.map((w) => (
-                        <option key={w.code} value={w.name}>
+                        <option key={w.id} value={w.name}>
                           {w.name}
                         </option>
                       ))}
                     </select>
 
-                    {/* Địa chỉ chi tiết */}
+                    {/* ĐỊA CHỈ CHI TIẾT */}
                     <input
                       type="text"
-                      value={formData.DiaChiChiTiet}
+                      value={formData.DiaChiChiTiet || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -470,7 +460,7 @@ export default function Profile() {
                         })
                       }
                       placeholder="Địa chỉ chi tiết"
-                      className="md:col-span-2 w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none transition"
+                      className="md:col-span-2 w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
                     />
                   </div>
                 ) : (
@@ -506,7 +496,6 @@ export default function Profile() {
                   <FaEdit /> Chỉnh sửa
                 </button>
               )}
-
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-6 py-2 bg-gray-200 text-gray-800 rounded-xl shadow hover:bg-gray-300 transition"

@@ -1,22 +1,45 @@
-// File này gọi API tỉnh thành cả nước
+// src/api/address.ts
 import axios from "axios";
 
-const BASE_URL = "https://provinces.open-api.vn/api";
+const API_BASE = "/api/location";
 
-/** Lấy danh sách tỉnh/thành */
-export const getProvinces = async () => {
-  const res = await axios.get(`${BASE_URL}/?depth=1`);
-  return res.data;
+export const getProvinces = async (): Promise<any[]> => {
+  console.log("🌐 [API] Gọi GET /api/location/provinces");
+  try {
+    const res = await axios.get(`${API_BASE}/provinces`);
+    let data = res.data;
+
+    // ✅ THÊM DÒNG NÀY: NẾU LÀ CHUỖI → PARSE
+    if (typeof data === "string") {
+      console.log("🔄 [API] Dữ liệu là chuỗi → parse JSON");
+      data = JSON.parse(data);
+    }
+
+    if (Array.isArray(data)) {
+      console.log("✅ [API] Thành công:", data.length, "tỉnh");
+      return data;
+    }
+
+    if (data && Array.isArray(data.province)) {
+      return data.province;
+    }
+
+    console.warn("⚠️ [API] Dữ liệu không hợp lệ");
+    return [];
+  } catch (err: any) {
+    console.error("❌ [API] Lỗi:", err.message);
+    return [];
+  }
 };
 
-/** Lấy danh sách quận/huyện theo mã tỉnh */
-export const getDistricts = async (provinceCode: string) => {
-  const res = await axios.get(`${BASE_URL}/p/${provinceCode}?depth=2`);
-  return res.data.districts || [];
-};
-
-/** Lấy danh sách phường/xã theo mã quận/huyện */
-export const getWards = async (districtCode: string) => {
-  const res = await axios.get(`${BASE_URL}/d/${districtCode}?depth=2`);
-  return res.data.wards || [];
+export const getWards = async (provinceId: string): Promise<any[]> => {
+  try {
+    const res = await axios.get(`${API_BASE}/wards/${provinceId}`);
+    let data = res.data;
+    if (typeof data === "string") data = JSON.parse(data);
+    return Array.isArray(data) ? data : [];
+  } catch (err: any) {
+    console.error("❌ [API] Lỗi getWards:", err.message);
+    return [];
+  }
 };

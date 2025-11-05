@@ -22,7 +22,7 @@ import { Input } from "@/components/input";
 import { showSuccess, showError } from "@/common/toast";
 
 // ✅ import API địa chỉ
-import { getProvinces, getDistricts, getWards } from "@/api/address";
+import { getProvinces, getWards } from "@/api/address";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -34,7 +34,7 @@ export default function AdminUsers() {
 
   // ✅ State cho địa chỉ
   const [provinces, setProvinces] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
+
   const [wards, setWards] = useState<any[]>([]);
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function AdminUsers() {
       email: "",
       SoDienThoai: "",
       TinhThanh: "",
-      QuanHuyen: "",
+
       PhuongXa: "",
       DiaChiChiTiet: "",
       avatar: "",
@@ -111,7 +111,7 @@ export default function AdminUsers() {
       email: user.email || "",
       SoDienThoai: user.SoDienThoai || "",
       TinhThanh: user.TinhThanh || "",
-      QuanHuyen: user.QuanHuyen || "",
+
       PhuongXa: user.PhuongXa || "",
       DiaChiChiTiet: user.DiaChiChiTiet || "",
       avatar: user.avatar || "",
@@ -119,10 +119,10 @@ export default function AdminUsers() {
 
     // ✅ Khi mở modal edit, nạp sẵn danh sách quận/huyện, phường/xã
     if (user.TinhThanh) {
-      getDistricts(user.TinhThanh).then(setDistricts);
-    }
-    if (user.QuanHuyen) {
-      getWards(user.QuanHuyen).then(setWards);
+      const prov = provinces.find((p) => p.name === user.TinhThanh);
+      if (prov) {
+        getWards(prov.id || prov.code).then(setWards);
+      }
     }
   };
 
@@ -130,7 +130,7 @@ export default function AdminUsers() {
     setEditingUser(null);
     setCreatingUser(false);
     setFormData({});
-    setDistricts([]);
+
     setWards([]);
   };
 
@@ -143,7 +143,7 @@ export default function AdminUsers() {
         email: formData.email || "",
         SoDienThoai: formData.SoDienThoai || "",
         TinhThanh: formData.TinhThanh || "",
-        QuanHuyen: formData.QuanHuyen || "",
+
         PhuongXa: formData.PhuongXa || "",
         DiaChiChiTiet: formData.DiaChiChiTiet || "",
         avatar: formData.avatar || "",
@@ -170,7 +170,7 @@ export default function AdminUsers() {
         email: formData.email || "",
         SoDienThoai: formData.SoDienThoai || "",
         TinhThanh: formData.TinhThanh || "",
-        QuanHuyen: formData.QuanHuyen || "",
+
         PhuongXa: formData.PhuongXa || "",
         DiaChiChiTiet: formData.DiaChiChiTiet || "",
         avatar: formData.avatar || "",
@@ -210,29 +210,14 @@ export default function AdminUsers() {
     setFormData({
       ...formData,
       TinhThanh: provinceName,
-      QuanHuyen: "",
+
       PhuongXa: "",
     });
     if (province) {
-      const data = await getDistricts(province.code);
-      setDistricts(data);
-      setWards([]);
-    }
-  };
-
-  const handleDistrictChange = async (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const districtName = e.target.value;
-    const district = districts.find((d) => d.name === districtName);
-    setFormData({
-      ...formData,
-      QuanHuyen: districtName,
-      PhuongXa: "",
-    });
-    if (district) {
-      const data = await getWards(district.code);
+      const data = await getWards(province.id || province.code); // ← GỌI TRỰC TIẾP
       setWards(data);
+    } else {
+      setWards([]);
     }
   };
 
@@ -475,26 +460,11 @@ export default function AdminUsers() {
               </select>
 
               <select
-                name="QuanHuyen"
-                value={formData.QuanHuyen || ""}
-                onChange={handleDistrictChange}
-                className="border rounded-lg w-full p-2"
-                disabled={!formData.TinhThanh}
-              >
-                <option value="">-- Chọn quận/huyện --</option>
-                {districts.map((d) => (
-                  <option key={d.code} value={d.name}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
                 name="PhuongXa"
                 value={formData.PhuongXa || ""}
                 onChange={handleWardChange}
                 className="border rounded-lg w-full p-2"
-                disabled={!formData.QuanHuyen}
+                disabled={!formData.TinhThanh}
               >
                 <option value="">-- Chọn phường/xã --</option>
                 {wards.map((w) => (
