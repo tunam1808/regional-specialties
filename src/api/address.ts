@@ -1,7 +1,7 @@
 // src/api/address.ts
 import axios from "axios";
 
-const API_BASE = "/api/location";
+const API_BASE = `${import.meta.env.VITE_API_URL}/location`;
 
 export const getProvinces = async (): Promise<any[]> => {
   console.log("🌐 [API] Gọi GET /api/location/provinces");
