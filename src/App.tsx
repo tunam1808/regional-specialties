@@ -18,7 +18,7 @@ import AccountManage from "@/assets/admin/account-manage";
 import FeedbackManage from "@/assets/admin/feedback-manage";
 import ProductsManage from "@/assets/admin/products-manage";
 import Cart from "@/assets/mini-component/cart-page";
-import Checkout from "./assets/mini-component/checkout";
+import Checkout from "@/assets/mini-component/Checkout";
 
 export default function App() {
   return (
