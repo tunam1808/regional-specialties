@@ -47,7 +47,7 @@ export default function Checkout() {
   });
 
   const [provinces, setProvinces] = useState<Province[]>([]);
-  const [wards, setWards] = useState<Ward[]>([]);
+  const [, setWards] = useState<Ward[]>([]);
   const [selectedTinhThanh, setSelectedTinhThanh] = useState<string>("");
   const [selectedPhuongXa, setSelectedPhuongXa] = useState<string>("");
   const [diaChiChiTiet, setDiaChiChiTiet] = useState<string>("");
