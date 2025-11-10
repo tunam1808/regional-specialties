@@ -156,6 +156,15 @@ export default function Header() {
                       setDropdownOpen(false);
                     }}
                   >
+                    Giỏ hàng
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => {
+                      navigate("/orders/:id");
+                      setDropdownOpen(false);
+                    }}
+                  >
                     Đơn hàng của bạn
                   </button>
                   <button

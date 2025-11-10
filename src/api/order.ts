@@ -1,16 +1,17 @@
 // 📁 src/api/order.ts
-import axiosInstance from "./axiosInstance";
+import api from "./axiosInstance";
 
 export interface CheckoutData {
   PhuongThucThanhToan: string;
   GhiChu?: string;
   DiaChiGiaoHang: string;
+  SanPhamDaChon: number[];
 }
 
 // Thanh toán – KHÔNG truyền user_id
 export const checkoutCart = async (data: CheckoutData) => {
   try {
-    const res = await axiosInstance.post("/api/orders/checkout", data);
+    const res = await api.post("/orders/checkout", data);
     return res.data;
   } catch (error: any) {
     console.error("Lỗi thanh toán:", error.response?.data || error);
@@ -18,10 +19,33 @@ export const checkoutCart = async (data: CheckoutData) => {
   }
 };
 
+// THANH TOÁN TRỰC TIẾP – DÀNH RIÊNG CHO "MUA NGAY" (KHÔNG QUA GIỎ HÀNG)
+export const checkoutDirectly = async (data: {
+  PhuongThucThanhToan: string;
+  DiaChiGiaoHang: string;
+  GhiChu?: string;
+  items: {
+    MaSP: number;
+    SoLuong: number;
+    GiaBanTaiThoiDiem: number;
+  }[];
+}) => {
+  try {
+    const res = await api.post("/orders/direct", data);
+    return res.data;
+  } catch (error: any) {
+    console.error(
+      "Lỗi thanh toán trực tiếp (Mua ngay):",
+      error.response?.data || error
+    );
+    throw error;
+  }
+};
+
 // Lấy tất cả đơn của mình
 export const getAllOrders = async () => {
   try {
-    const res = await axiosInstance.get("/api/orders");
+    const res = await api.get("/orders");
     return res.data;
   } catch (error: any) {
     console.error("Lỗi lấy đơn hàng:", error.response?.data || error);
@@ -32,7 +56,7 @@ export const getAllOrders = async () => {
 // Lấy chi tiết đơn
 export const getOrderById = async (id: string) => {
   try {
-    const res = await axiosInstance.get(`/api/orders/${id}`);
+    const res = await api.get(`/orders/${id}`);
     return res.data;
   } catch (error: any) {
     console.error("Lỗi lấy chi tiết đơn:", error.response?.data || error);
@@ -43,7 +67,7 @@ export const getOrderById = async (id: string) => {
 // Xóa đơn (chỉ chủ đơn)
 export const deleteOrder = async (id: string) => {
   try {
-    const res = await axiosInstance.delete(`/api/orders/${id}`);
+    const res = await api.delete(`/orders/${id}`);
     return res.data;
   } catch (error: any) {
     console.error("Lỗi xóa đơn:", error.response?.data || error);
@@ -51,10 +75,10 @@ export const deleteOrder = async (id: string) => {
   }
 };
 
-// Cập nhật trạng thái (chỉ chủ đơn)
+// Cập nhật trạng thái (chỉ admin)
 export const updateOrderStatus = async (id: string, TrangThai: string) => {
   try {
-    const res = await axiosInstance.put(`/api/orders/${id}/status`, {
+    const res = await api.put(`/orders/${id}/status`, {
       TrangThai,
     }); // ← DÙNG axiosInstance
     return res.data;
@@ -67,7 +91,7 @@ export const updateOrderStatus = async (id: string, TrangThai: string) => {
 // Lấy giỏ hàng (nếu cần riêng)
 export const getCart = async () => {
   try {
-    const res = await axiosInstance.get("/api/orders/cart");
+    const res = await api.get("/api/orders/cart");
     return res.data;
   } catch (error: any) {
     console.error("Lỗi lấy giỏ:", error.response?.data || error);

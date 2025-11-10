@@ -1,25 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/button";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   FaMoneyBillWave,
   FaQrcode,
   FaEdit,
   FaTimes,
   FaArrowLeft,
+  FaCopy,
+  FaCheck,
+  FaPaypal,
 } from "react-icons/fa";
 import { getProfile } from "@/api/get-profile";
 import { updateUser } from "@/api/update-user";
 import { getProvinces, getWards } from "@/api/address";
 import { showSuccess, showError } from "@/common/toast";
+import {
+  checkoutCart,
+  checkoutDirectly,
+  getOrderById,
+  updateOrderStatus,
+} from "@/api/order";
+import { createPayPalPayment, redirectToPayPal } from "@/api/payment";
 
 interface CartItem {
+  MaSP: number;
+  GiaBan: number;
   id: number;
   name: string;
   price: number;
   hinhAnh: string;
   quantity: number;
+  checked?: boolean;
+  buyNow?: boolean;
 }
 
 interface Customer {
@@ -38,6 +51,15 @@ interface Ward {
   name: string;
 }
 
+interface QrModalData {
+  qrUrl: string;
+  amount: number;
+  accountNumber: string;
+  accountName: string;
+  info: string;
+  MaDonHang: string;
+}
+
 export default function Checkout() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<Customer>({
@@ -47,7 +69,7 @@ export default function Checkout() {
   });
 
   const [provinces, setProvinces] = useState<Province[]>([]);
-  const [, setWards] = useState<Ward[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
   const [selectedTinhThanh, setSelectedTinhThanh] = useState<string>("");
   const [selectedPhuongXa, setSelectedPhuongXa] = useState<string>("");
   const [diaChiChiTiet, setDiaChiChiTiet] = useState<string>("");
@@ -55,9 +77,12 @@ export default function Checkout() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "qr" | "paypal">(
+    "cod"
+  );
+  const [isBuyNow, setIsBuyNow] = useState(false);
 
-  // Modal state
+  // Modal chỉnh sửa
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editPhone, setEditPhone] = useState("");
   const [editDiaChiChiTiet, setEditDiaChiChiTiet] = useState("");
@@ -65,11 +90,117 @@ export default function Checkout() {
   const [editPhuongXa, setEditPhuongXa] = useState("");
   const [editWards, setEditWards] = useState<Ward[]>([]);
 
-  const navigate = useNavigate();
+  // Modal QR
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrModalData, setQrModalData] = useState<QrModalData | null>(null);
+  const [copiedField, setCopiedField] = useState<string>("");
+  const [completingPayment, setCompletingPayment] = useState(false); // Loading nút hoàn tất
 
-  /* -------------------------------------------------------------------------- */
-  /*  1. LOAD PROVINCES                                                         */
-  /* -------------------------------------------------------------------------- */
+  const navigate = useNavigate();
+  const isCheckingRef = useRef(false);
+
+  /* ========================================================================== */
+  /*  TỰ ĐỘNG KIỂM TRA TRẠNG THÁI ĐƠN HÀNG KHI MỞ MODAL QR                     */
+  /* ========================================================================== */
+  useEffect(() => {
+    if (!isQrModalOpen || !qrModalData) {
+      isCheckingRef.current = false;
+      return;
+    }
+
+    isCheckingRef.current = true;
+
+    const checkOrderStatus = async () => {
+      if (!isCheckingRef.current) return;
+
+      try {
+        const order = await getOrderById(qrModalData.MaDonHang);
+        if (order.TrangThai === "Đã xác nhận") {
+          showSuccess("Thanh toán thành công! Đơn hàng đã được xác nhận.");
+          localStorage.removeItem("cart_checkout");
+          setIsQrModalOpen(false);
+          navigate(`/orders/success/${qrModalData.MaDonHang}`);
+        }
+      } catch (err) {
+        console.error("Lỗi kiểm tra đơn hàng:", err);
+      }
+    };
+
+    // Kiểm tra ngay lập tức + mỗi 3 giây
+    checkOrderStatus();
+    const interval = setInterval(checkOrderStatus, 7000);
+
+    return () => {
+      isCheckingRef.current = false;
+      clearInterval(interval);
+    };
+  }, [isQrModalOpen, qrModalData, navigate]);
+
+  /* ========================================================================== */
+  /*  1. LOAD CART – SIÊU SẠCH                                                  */
+  /* ========================================================================== */
+  useEffect(() => {
+    const loadCart = () => {
+      const raw = localStorage.getItem("cart_checkout");
+      if (!raw || raw === "[]" || raw === "null" || raw.trim() === "") {
+        localStorage.removeItem("cart_checkout");
+        setCart([]);
+        setIsBuyNow(false);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          localStorage.removeItem("cart_checkout");
+          setCart([]);
+          return;
+        }
+
+        if (parsed.length === 1 && parsed[0].buyNow === true) {
+          setIsBuyNow(true);
+          const item = parsed[0];
+          const cleanItem: CartItem = {
+            id: item.id || Date.now(),
+            MaSP: item.MaSP ?? item.id ?? 0,
+            GiaBan: item.GiaBan ?? item.price ?? 0,
+            name: item.name || "Sản phẩm",
+            price: item.price ?? item.GiaBan ?? 0,
+            hinhAnh: item.hinhAnh || "",
+            quantity: item.quantity || 1,
+            checked: true,
+            buyNow: true,
+          };
+          setCart([cleanItem]);
+          return;
+        }
+
+        setIsBuyNow(false);
+        const normalized: CartItem[] = parsed.map((item: any) => ({
+          id: item.id || Date.now(),
+          MaSP: item.MaSP ?? item.id ?? 0,
+          GiaBan: item.GiaBan ?? item.price ?? 0,
+          name: item.name || "Sản phẩm",
+          price: item.price ?? item.GiaBan ?? 0,
+          hinhAnh: item.hinhAnh || "",
+          quantity: item.quantity || 1,
+          checked: item.checked ?? true,
+          buyNow: item.buyNow ?? false,
+        }));
+        setCart(normalized);
+      } catch (err) {
+        console.error("Lỗi parse cart_checkout:", err);
+        localStorage.removeItem("cart_checkout");
+        setCart([]);
+      }
+    };
+
+    loadCart();
+  }, []);
+
+  /* ========================================================================== */
+  /*  2. LOAD PROVINCES                                                         */
+  /* ========================================================================== */
   useEffect(() => {
     const loadProvinces = async () => {
       try {
@@ -85,13 +216,10 @@ export default function Checkout() {
     loadProvinces();
   }, []);
 
-  /* -------------------------------------------------------------------------- */
-  /*  2. LOAD CART + PROFILE                                                    */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
+  /*  3. LOAD PROFILE + PARSE ĐỊA CHỈ                                           */
+  /* ========================================================================== */
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart_checkout");
-    if (savedCart) setCart(JSON.parse(savedCart));
-
     const fetchProfile = async () => {
       try {
         const profile = await getProfile();
@@ -112,18 +240,12 @@ export default function Checkout() {
       }
     };
 
-    fetchProfile();
+    if (provinces.length > 0) fetchProfile();
   }, [provinces]);
 
-  useEffect(() => {
-    if (provinces.length > 0 && customer.address && !selectedTinhThanh) {
-      parseAddressFromProfile(customer.address);
-    }
-  }, [provinces, customer.address]);
-
-  /* -------------------------------------------------------------------------- */
-  /*  3. LOAD WARDS KHI CÓ TỈNH                                                 */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
+  /*  4. LOAD WARDS                                                             */
+  /* ========================================================================== */
   useEffect(() => {
     if (!selectedTinhThanh) {
       setWards([]);
@@ -149,21 +271,23 @@ export default function Checkout() {
     loadWards();
   }, [selectedTinhThanh, provinces]);
 
-  /* -------------------------------------------------------------------------- */
-  /*  4. GHÉP ĐỊA CHỈ ĐẦY ĐỦ                                                    */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
+  /*  5. GHÉP ĐỊA CHỈ                                                            */
+  /* ========================================================================== */
   useEffect(() => {
     const fullAddress = [diaChiChiTiet, selectedPhuongXa, selectedTinhThanh]
       .filter(Boolean)
       .join(", ")
       .trim()
       .replace(/, $/, "");
-    setCustomer((prev) => ({ ...prev, address: fullAddress }));
+    if (fullAddress) {
+      setCustomer((prev) => ({ ...prev, address: fullAddress }));
+    }
   }, [diaChiChiTiet, selectedPhuongXa, selectedTinhThanh]);
 
-  /* -------------------------------------------------------------------------- */
-  /*  5. PARSE ĐỊA CHỈ TỪ DiaChiDayDu                                           */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
+  /*  6. PARSE ĐỊA CHỈ TỪ PROFILE                                               */
+  /* ========================================================================== */
   const parseAddressFromProfile = (fullAddress: string) => {
     const parts = fullAddress.split(",").map((p) => p.trim());
     if (parts.length < 3) return;
@@ -200,64 +324,44 @@ export default function Checkout() {
       .catch(console.error);
   };
 
-  /* -------------------------------------------------------------------------- */
-  /*  6. MỞ MODAL CHỈNH SỬA                                                     */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
+  /*  7. MODAL CHỈNH SỬA                                                        */
+  /* ========================================================================== */
   const openEditModal = () => {
     setEditPhone(customer.phone);
     setEditDiaChiChiTiet(diaChiChiTiet);
     setEditTinhThanh(selectedTinhThanh);
     setEditPhuongXa(selectedPhuongXa);
-
-    if (selectedTinhThanh) {
-      const prov = provinces.find((p) => p.name === selectedTinhThanh);
-      if (prov) {
-        getWards(prov.idProvince).then(setEditWards).catch(console.error);
-      }
-    }
-
+    setEditWards(wards);
     setIsModalOpen(true);
   };
 
-  /* -------------------------------------------------------------------------- */
-  /*  7. LOAD WARDS TRONG MODAL                                                 */
-  /* -------------------------------------------------------------------------- */
   useEffect(() => {
     if (!editTinhThanh || !isModalOpen) {
       setEditWards([]);
       return;
     }
-
     const prov = provinces.find((p) => p.name === editTinhThanh);
-    if (!prov?.idProvince) return;
-
-    getWards(prov.idProvince)
-      .then(setEditWards)
-      .catch((err) => {
-        console.error("Lỗi load phường trong modal:", err);
-        setEditWards([]);
-      });
+    if (prov?.idProvince) {
+      getWards(prov.idProvince)
+        .then(setEditWards)
+        .catch(() => setEditWards([]));
+    }
   }, [editTinhThanh, isModalOpen, provinces]);
 
-  /* -------------------------------------------------------------------------- */
-  /*  8. LƯU THAY ĐỔI                                                           */
-  /* -------------------------------------------------------------------------- */
   const handleSaveEdit = async () => {
     if (!editPhone || !editDiaChiChiTiet || !editTinhThanh || !editPhuongXa) {
       showError("Vui lòng điền đầy đủ thông tin!");
       return;
     }
-
     if (!/^\d{10,11}$/.test(editPhone)) {
       showError("Số điện thoại phải có 10-11 chữ số!");
       return;
     }
-
     if (editDiaChiChiTiet.length < 5 || editDiaChiChiTiet.length > 200) {
       showError("Địa chỉ chi tiết phải từ 5-200 ký tự!");
       return;
     }
-
     if (!userId) {
       showError("Không tìm thấy thông tin người dùng!");
       return;
@@ -275,9 +379,8 @@ export default function Checkout() {
       setDiaChiChiTiet(editDiaChiChiTiet);
       setSelectedTinhThanh(editTinhThanh);
       setSelectedPhuongXa(editPhuongXa);
-
       setIsModalOpen(false);
-      showSuccess("Cập nhật thông tin giao hàng thành công!");
+      showSuccess("Cập nhật thành công!");
     } catch (err: any) {
       const msg = err.message || "Lỗi cập nhật";
       if (msg.includes("Token") || msg.includes("hết hạn")) {
@@ -291,12 +394,16 @@ export default function Checkout() {
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /*  TÍNH TỔNG TIỀN                                                            */
-  /* -------------------------------------------------------------------------- */
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  /* ========================================================================== */
+  /*  TÍNH TIỀN + HÌNH ẢNH                                                       */
+  /* ========================================================================== */
+  const total = cart.reduce(
+    (sum, item) =>
+      sum + Number(item.price || item.GiaBan) * Number(item.quantity),
+    0
+  );
 
-  const getImageUrl = (hinhAnh: string | undefined) => {
+  const getImageUrl = (hinhAnh?: string) => {
     if (!hinhAnh) return "/img-produce/default.jpg";
     if (hinhAnh.startsWith("http")) return hinhAnh;
     if (
@@ -309,330 +416,505 @@ export default function Checkout() {
     return `${baseUrl}${hinhAnh}`;
   };
 
-  /* -------------------------------------------------------------------------- */
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(""), 2000);
+    } catch {
+      showError("Copy thất bại!");
+    }
+  };
+
+  /* ========================================================================== */
   /*  XỬ LÝ ĐẶT HÀNG                                                            */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!customer.name || !customer.phone || !customer.address) {
-      showSuccess("Vui lòng điền đầy đủ thông tin!");
+      showError("Vui lòng điền đầy đủ thông tin!");
       return;
     }
 
-    if (paymentMethod === "cod") {
-      alert(
-        `Đặt hàng thành công!\n\nCảm ơn ${
-          customer.name
-        }.\nTổng tiền: ${total.toLocaleString("vi-VN")}₫\nĐịa chỉ: ${
-          customer.address
-        }`
-      );
-      localStorage.removeItem("cart_checkout");
-      navigate("/");
-    } else {
-      try {
-        const res = await axios.post(
-          "https://your-backend-production.up.railway.app/api/payment/momo",
-          {
-            amount: total,
-            orderId: Date.now().toString(),
-            orderInfo: `Thanh toán đơn hàng #${Date.now()}`,
-          }
-        );
-        if (res.data.payUrl) window.location.href = res.data.payUrl;
-        else showError("Không thể tạo thanh toán MoMo!");
-      } catch (error) {
-        console.error(error);
-        showError("Lỗi khi tạo thanh toán online!");
+    const selectedItems = cart.filter((item) => item.checked);
+    if (selectedItems.length === 0) {
+      showError("Vui lòng chọn sản phẩm!");
+      return;
+    }
+
+    const orderItems = selectedItems.map((item) => ({
+      MaSP: item.MaSP,
+      SoLuong: item.quantity,
+      GiaBanTaiThoiDiem: item.price || item.GiaBan,
+    }));
+
+    try {
+      let res;
+
+      if (isBuyNow) {
+        res = await checkoutDirectly({
+          PhuongThucThanhToan:
+            paymentMethod === "cod"
+              ? "Tiền mặt"
+              : paymentMethod === "qr"
+              ? "Chuyển khoản"
+              : "PayPal",
+          DiaChiGiaoHang: customer.address,
+          GhiChu:
+            paymentMethod === "cod" ? "Thanh toán khi nhận hàng" : "Mua ngay",
+          items: orderItems,
+        });
+      } else {
+        res = await checkoutCart({
+          PhuongThucThanhToan:
+            paymentMethod === "cod"
+              ? "Tiền mặt"
+              : paymentMethod === "qr"
+              ? "Chuyển khoản"
+              : "PayPal",
+          DiaChiGiaoHang: customer.address,
+          GhiChu: "Thanh toán khi nhận hàng",
+          SanPhamDaChon: selectedItems.map((sp) => sp.MaSP),
+        });
       }
+
+      localStorage.removeItem("cart_checkout");
+      showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
+
+      if (paymentMethod === "qr") {
+        const info = `Thanh toan don hang #${res.MaDonHang}`;
+        const qrUrl = `https://img.vietqr.io/image/MB-82349824742-compact.png?amount=${total}&accountName=VU%20TU%20NAM&addInfo=${encodeURIComponent(
+          info
+        )}`;
+        setQrModalData({
+          qrUrl,
+          amount: total,
+          accountNumber: "82349824742",
+          accountName: "VU TU NAM",
+          info,
+          MaDonHang: res.MaDonHang,
+        });
+        setIsQrModalOpen(true);
+        return;
+      }
+
+      if (paymentMethod === "paypal") {
+        const paypalRes = await createPayPalPayment(
+          total,
+          `Thanh toán đơn hàng #${res.MaDonHang}`
+        );
+        if (paypalRes?.approveLink) redirectToPayPal(paypalRes.approveLink);
+        else showError("Lỗi PayPal!");
+        return;
+      }
+
+      navigate(`/orders/success/${res.MaDonHang}`);
+    } catch (error: any) {
+      showError(error.response?.data?.message || "Đặt hàng thất bại!");
     }
   };
 
-  /* -------------------------------------------------------------------------- */
-  /*  UI – LOADING                                                             */
-  /* -------------------------------------------------------------------------- */
+  /* ========================================================================== */
+  /*  RENDER                                                                    */
+  /* ========================================================================== */
   if (loadingProfile || loadingAddress) {
-    return (
-      <div className="text-center py-20 text-gray-600">
-        Đang tải thông tin khách hàng và địa chỉ...
-      </div>
-    );
+    return <div className="text-center py-20 text-gray-600">Đang tải...</div>;
   }
 
-  /* -------------------------------------------------------------------------- */
-  /*  RENDER                                                                    */
-  /* -------------------------------------------------------------------------- */
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      {/* NÚT QUAY LẠI – ĐẶT Ở ĐẦU TRANG */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition transform hover:-translate-y-0.5 shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md"
         >
           <FaArrowLeft /> Quay lại
         </button>
-
-        <h1 className="text-4xl font-bold text-green-700 text-center flex-1 md:flex-none">
+        <h1 className="text-4xl font-bold text-green-700 text-center flex-1">
           Thanh toán đơn hàng
         </h1>
       </div>
 
       {cart.length === 0 ? (
-        <div className="text-center py-10 text-gray-600">
-          <p>Giỏ hàng trống, vui lòng quay lại mua sắm.</p>
+        <div className="text-center py-10">
+          <p className="text-gray-600 mb-4">Giỏ hàng trống!</p>
           <Button
-            className="mt-4 bg-green-500 text-white hover:bg-green-600"
             onClick={() => navigate("/products")}
+            className="bg-green-600 hover:bg-green-700"
           >
-            Quay lại cửa hàng
+            Tiếp tục mua sắm
           </Button>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
-          {/* ---------- FORM ---------- */}
+          {/* FORM */}
           <form
             onSubmit={handleCheckout}
-            className="bg-white shadow-lg rounded-lg p-6 border border-gray-100"
+            className="bg-white shadow-lg rounded-lg p-6 border flex flex-col h-full"
           >
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Thông tin giao hàng
-            </h2>
-
-            <div className="space-y-4">
-              {/* Họ tên */}
+            <h2 className="text-xl font-semibold mb-4">Thông tin giao hàng</h2>
+            <div className="space-y-4 flex-1">
               <div>
-                <label className="block mb-1 font-medium">Họ và tên</label>
-                <p className="p-2 bg-gray-50 rounded-md text-gray-700">
+                <label className="block font-medium">Họ và tên</label>
+                <p className="p-2 bg-gray-50 rounded">
                   {customer.name || "Chưa có"}
                 </p>
               </div>
-
-              {/* SĐT + Địa chỉ */}
               <div className="space-y-3">
                 <div>
-                  <label className="block mb-1 font-medium">
-                    Số điện thoại
-                  </label>
-                  <p className="p-2 bg-gray-50 rounded-md text-gray-700">
+                  <label className="block font-medium">Số điện thoại</label>
+                  <p className="p-2 bg-gray-50 rounded">
                     {customer.phone || "Chưa cập nhật"}
                   </p>
                 </div>
-
                 <div>
-                  <label className="block mb-1 font-medium">
-                    Địa chỉ nhận hàng
-                  </label>
-                  <p className="p-2 bg-gray-50 rounded-md text-gray-700">
+                  <label className="block font-medium">Địa chỉ nhận hàng</label>
+                  <p className="p-2 bg-gray-50 rounded">
                     {customer.address || "Chưa cập nhật"}
                   </p>
                 </div>
-
                 <button
                   type="button"
                   onClick={openEditModal}
-                  className="flex items-center gap-2 w-full justify-center py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                  className="w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center gap-2"
                 >
-                  <FaEdit /> Chỉnh sửa thông tin giao hàng
+                  <FaEdit /> Chỉnh sửa
                 </button>
               </div>
 
-              {/* Phương thức thanh toán */}
-              <div>
-                <label className="block mb-2 font-medium">
+              <div className="flex-1 flex flex-col justify-end">
+                <label className="block font-medium mb-2">
                   Phương thức thanh toán
                 </label>
                 <div className="space-y-3">
-                  <label
-                    className={`flex items-center justify-between p-3 border rounded-md cursor-pointer ${
-                      paymentMethod === "cod"
-                        ? "border-green-600 bg-green-50"
-                        : "border-gray-300"
-                    }`}
-                    onClick={() => setPaymentMethod("cod")}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FaMoneyBillWave className="text-green-600 text-xl" />
-                      <span>Thanh toán khi nhận hàng (COD)</span>
-                    </div>
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === "cod"}
-                      readOnly
-                    />
-                  </label>
-
-                  <label
-                    className={`flex items-center justify-between p-3 border rounded-md cursor-pointer ${
-                      paymentMethod === "online"
-                        ? "border-purple-600 bg-purple-50"
-                        : "border-gray-300"
-                    }`}
-                    onClick={() => setPaymentMethod("online")}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FaQrcode className="text-purple-600 text-xl" />
-                      <span>Thanh toán online (MoMo / QR)</span>
-                    </div>
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === "online"}
-                      readOnly
-                    />
-                  </label>
+                  {["cod", "qr", "paypal"].map((method) => (
+                    <label
+                      key={method}
+                      className={`flex items-center justify-between p-3 border rounded cursor-pointer ${
+                        paymentMethod === method
+                          ? method === "cod"
+                            ? "border-green-600 bg-green-50"
+                            : method === "qr"
+                            ? "border-blue-600 bg-blue-50"
+                            : "border-yellow-600 bg-yellow-50"
+                          : "border-gray-300"
+                      }`}
+                      onClick={() => setPaymentMethod(method as any)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {method === "cod" && (
+                          <FaMoneyBillWave className="text-green-600" />
+                        )}
+                        {method === "qr" && (
+                          <FaQrcode className="text-blue-600" />
+                        )}
+                        {method === "paypal" && (
+                          <FaPaypal className="text-yellow-600" />
+                        )}
+                        <span>
+                          {method === "cod" && "Thanh toán khi nhận hàng (COD)"}
+                          {method === "qr" && "Chuyển khoản QR"}
+                          {method === "paypal" && "Thanh toán qua PayPal"}
+                        </span>
+                      </div>
+                      <input
+                        type="radio"
+                        checked={paymentMethod === method}
+                        readOnly
+                      />
+                    </label>
+                  ))}
                 </div>
-              </div>
 
-              <Button
-                type="submit"
-                className={`w-full py-3 text-white rounded-md mt-4 ${
-                  paymentMethod === "cod"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-purple-600 hover:bg-purple-700"
-                }`}
-              >
-                {paymentMethod === "cod"
-                  ? "Xác nhận đặt hàng"
-                  : "Thanh toán online"}
-              </Button>
+                <Button
+                  type="submit"
+                  className={`w-full py-4 mt-6 text-white font-bold text-lg ${
+                    paymentMethod === "cod"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : paymentMethod === "qr"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-yellow-600 hover:bg-yellow-700"
+                  }`}
+                >
+                  {paymentMethod === "cod"
+                    ? "Xác nhận đặt hàng"
+                    : paymentMethod === "qr"
+                    ? "Hiển thị mã QR"
+                    : "Thanh toán qua PayPal"}
+                </Button>
+              </div>
             </div>
           </form>
 
-          {/* ---------- ĐƠN HÀNG ---------- */}
-          <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-100">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Đơn hàng của bạn
-            </h2>
-            <ul className="divide-y divide-gray-200">
-              {cart.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex justify-between items-center py-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={getImageUrl(item.hinhAnh)}
-                      alt={item.name}
-                      className="w-12 h-12 object-cover rounded-md border"
-                      onError={(e) => {
-                        e.currentTarget.src = "/img-produce/default.jpg";
-                      }}
-                    />
-                    <div>
-                      <p className="font-medium text-gray-800">{item.name}</p>
-                      <p className="text-sm text-gray-500">
-                        SL: {item.quantity}
-                      </p>
+          {/* ĐƠN HÀNG */}
+          <div className="bg-white shadow-lg rounded-lg border flex flex-col h-full">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-semibold">Đơn hàng của bạn</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto max-h-96 px-6">
+              <ul className="divide-y py-4">
+                {cart.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex justify-between items-center py-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={getImageUrl(item.hinhAnh)}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-lg border"
+                        onError={(e) =>
+                          (e.currentTarget.src = "/img-produce/default.jpg")
+                        }
+                      />
+                      <div>
+                        <p className="font-medium line-clamp-2">{item.name}</p>
+                        <p className="text-sm text-gray-500">
+                          SL: {item.quantity} ×{" "}
+                          {(item.price || item.GiaBan).toLocaleString("vi-VN")}₫
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-green-600 font-semibold">
-                    {(item.price * item.quantity).toLocaleString("vi-VN")}₫
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-6 border-t pt-4 flex justify-between text-lg font-semibold">
-              <span>Tổng cộng:</span>
-              <span className="text-yellow-600">
-                {total.toLocaleString("vi-VN")}₫
-              </span>
+                    <span className="text-green-600 font-bold">
+                      {(
+                        Number(item.price || item.GiaBan) * item.quantity
+                      ).toLocaleString("vi-VN")}
+                      ₫
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-6 border-t bg-gray-50">
+              <div className="flex justify-between text-xl font-bold">
+                <span>Tổng cộng:</span>
+                <span className="text-yellow-600">
+                  {total.toLocaleString("vi-VN")}₫
+                </span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ==================== MODAL CHỈNH SỬA ==================== */}
+      {/* MODAL CHỈNH SỬA */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              className="absolute top-3 right-3"
             >
               <FaTimes />
             </button>
-
-            <h3 className="text-xl font-bold mb-4 text-gray-800">
-              Chỉnh sửa thông tin giao hàng
-            </h3>
-
+            <h3 className="text-xl font-bold mb-4">Chỉnh sửa thông tin</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block mb-1 font-medium">Số điện thoại</label>
-                <input
-                  type="text"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="0987654321"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">Số nhà, đường</label>
-                <input
-                  type="text"
-                  value={editDiaChiChiTiet}
-                  onChange={(e) => setEditDiaChiChiTiet(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  placeholder="123 Đường Láng"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">Tỉnh/Thành phố</label>
-                <select
-                  value={editTinhThanh}
-                  onChange={(e) => {
-                    setEditTinhThanh(e.target.value);
-                    setEditPhuongXa("");
-                  }}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-                >
-                  <option value="">-- Chọn Tỉnh/Thành --</option>
-                  {provinces.map((p) => (
-                    <option key={p.idProvince} value={p.name}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">Phường/Xã</label>
-                <select
-                  value={editPhuongXa}
-                  onChange={(e) => setEditPhuongXa(e.target.value)}
-                  disabled={!editTinhThanh}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100"
-                >
-                  <option value="">-- Chọn Phường/Xã --</option>
-                  {editWards.map((w) => (
-                    <option key={w.id} value={w.name}>
-                      {w.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <input
+                type="text"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="Số điện thoại"
+                className="w-full border rounded p-2"
+              />
+              <input
+                type="text"
+                value={editDiaChiChiTiet}
+                onChange={(e) => setEditDiaChiChiTiet(e.target.value)}
+                placeholder="Số nhà, đường"
+                className="w-full border rounded p-2"
+              />
+              <select
+                value={editTinhThanh}
+                onChange={(e) => {
+                  setEditTinhThanh(e.target.value);
+                  setEditPhuongXa("");
+                }}
+                className="w-full border rounded p-2"
+              >
+                <option value="">-- Chọn Tỉnh/Thành --</option>
+                {provinces.map((p) => (
+                  <option key={p.idProvince} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={editPhuongXa}
+                onChange={(e) => setEditPhuongXa(e.target.value)}
+                disabled={!editTinhThanh}
+                className="w-full border rounded p-2 disabled:bg-gray-100"
+              >
+                <option value="">-- Chọn Phường/Xã --</option>
+                {editWards.map((w) => (
+                  <option key={w.id} value={w.name}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
             </div>
-
             <div className="flex gap-3 mt-6">
               <Button
                 onClick={handleSaveEdit}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 bg-green-600 hover:bg-green-700"
               >
-                Lưu thay đổi
+                Lưu
               </Button>
               <Button
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800"
+                className="flex-1 bg-gray-300"
               >
                 Hủy
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL QR - CHỈ ĐÓNG KHI ĐÃ XÁC NHẬN */}
+      {isQrModalOpen && qrModalData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-2xl font-bold text-blue-700">
+                Quét mã QR để thanh toán
+              </h3>
+              <button
+                onClick={() => setIsQrModalOpen(false)}
+                disabled={completingPayment}
+              >
+                <FaTimes
+                  className={`text-2xl ${
+                    completingPayment ? "opacity-50" : ""
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="p-8 flex flex-col md:flex-row gap-10 items-center">
+              <img src={qrModalData.qrUrl} alt="QR" className="w-72 h-72" />
+              <div className="space-y-5 text-lg">
+                <div className="bg-blue-50 p-5 rounded-xl">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-semibold">Số tiền:</span>
+                    <span className="text-2xl font-bold text-red-600">
+                      {qrModalData.amount.toLocaleString("vi-VN")}₫
+                    </span>
+                  </div>
+                  {[
+                    "Ngân hàng: MB Bank",
+                    `STK: ${qrModalData.accountNumber}`,
+                    `Chủ TK: ${qrModalData.accountName}`,
+                    `Nội dung: ${qrModalData.info}`,
+                  ].map((text, i) => (
+                    <div key={i} className="flex justify-between items-center">
+                      <span>{text.split(":")[0]}:</span>
+                      <div className="flex items-center gap-2">
+                        <strong>{text.split(": ")[1]}</strong>
+                        <button
+                          onClick={() =>
+                            copyToClipboard(text.split(": ")[1], i.toString())
+                          }
+                          disabled={completingPayment}
+                        >
+                          {copiedField === i.toString() ? (
+                            <FaCheck className="text-green-600" />
+                          ) : (
+                            <FaCopy />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t bg-gray-50 text-center">
+              <Button
+                onClick={async () => {
+                  if (completingPayment) return;
+                  setCompletingPayment(true);
+
+                  try {
+                    // Bước 1: User báo → trạng thái = Chờ xác nhận
+                    await updateOrderStatus(
+                      qrModalData.MaDonHang,
+                      "Chờ xác nhận"
+                    );
+                    showSuccess("Đã báo chuyển khoản!");
+
+                    // Bước 2: Tự động xác nhận sau 7 giây (nếu admin không hủy)
+                    setTimeout(async () => {
+                      try {
+                        const order = await getOrderById(qrModalData.MaDonHang);
+                        if (order.TrangThai === "Chờ xác nhận") {
+                          await updateOrderStatus(
+                            qrModalData.MaDonHang,
+                            "Đã xác nhận"
+                          );
+                          showSuccess(
+                            "Thanh toán thành công! Đơn hàng đã được xác nhận tự động."
+                          );
+                          localStorage.removeItem("cart_checkout");
+                          setIsQrModalOpen(false);
+                          navigate(`/orders/success/${qrModalData.MaDonHang}`);
+                        }
+                      } catch (err) {
+                        console.error("Lỗi tự động xác nhận:", err);
+                      }
+                    }, 7000);
+                  } catch (err: any) {
+                    if (
+                      err.response?.status === 401 ||
+                      err.response?.status === 403
+                    )
+                      return;
+                    showError(
+                      err.response?.data?.message ||
+                        "Báo chuyển khoản thất bại!"
+                    );
+                    setCompletingPayment(false);
+                  }
+                }}
+                disabled={completingPayment}
+                className={`px-10 py-3 text-white font-bold text-lg rounded-lg flex items-center gap-3 mx-auto ${
+                  completingPayment
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {completingPayment ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Đang xác nhận...
+                  </>
+                ) : (
+                  "Đã chuyển khoản – Hoàn tất"
+                )}
+              </Button>
+              <p className="text-sm text-gray-600 mt-4">
+                {completingPayment
+                  ? "Vui lòng chờ hệ thống xác nhận giao dịch... Đừng thoát!"
+                  : "Nhấn khi bạn đã chuyển khoản chính xác"}
+              </p>
             </div>
           </div>
         </div>

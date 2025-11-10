@@ -17,8 +17,12 @@ import AdminPage from "@/assets/admin/manage-page";
 import AccountManage from "@/assets/admin/account-manage";
 import FeedbackManage from "@/assets/admin/feedback-manage";
 import ProductsManage from "@/assets/admin/products-manage";
+import OrderManage from "@/assets/admin/order-manage";
 import Cart from "@/assets/mini-component/cart-page";
 import Checkout from "@/assets/mini-component/Checkout";
+import CheckoutAfter from "@/assets/mini-component/checkout-after";
+import OrderDetail from "@/assets/mini-component/order-detail";
+import PaymentSuccess from "@/assets/mini-component/payment-success";
 
 export default function App() {
   return (
@@ -44,12 +48,16 @@ export default function App() {
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart-page" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/orders/success/:id" element={<CheckoutAfter />} />
+        <Route path="/orders/:id" element={<OrderDetail />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
         {/*Trang quản lý của admin */}
         <Route path="/manage-page" element={<AdminPage />}>
           <Route index element={<AccountManage />} />
           <Route path="account-manage" element={<AccountManage />} />
           <Route path="feedback-manage" element={<FeedbackManage />} />
           <Route path="products-manage" element={<ProductsManage />} />
+          <Route path="order-manage" element={<OrderManage />} />
         </Route>
       </Routes>
     </Router>
