@@ -1,89 +1,107 @@
-// Đây là section sản phẩm nổi bật nằm trong trang chủ
-
 import { Button } from "@/components/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import { useNavigate } from "react-router-dom";
-import Nem from "@/assets/images/images-home/nem-chua-xu-thanh.jpg";
-import Gio from "@/assets/images/images-home/go-me.png";
-import Thit from "@/assets/images/images-home/thit-trau.jpg";
-import Muc from "@/assets/images/images-home/muc.jpg";
-import Com from "@/assets/images/images-home/com.jpg";
-import Tet from "@/assets/images/images-home/Cach-lam-banh-tet-la-cam.jpg";
-import Keo from "@/assets/images/images-home/keo.png";
-import Hat from "@/assets/images/images-home/hatdieu.jpg";
-
-const products = [
-  {
-    id: 1,
-    name: "Thịt trâu gác bếp",
-    description:
-      "Thịt trâu gác bếp – đặc sản Tây Bắc, dai ngọt, thơm mùi khói.",
-    price: "450.000đ",
-    image: Thit,
-  },
-  {
-    id: 2,
-    name: "Nem chua Thanh Hóa",
-    description: "Đặc sản xứ Thanh – chua nhẹ, giòn dai, đậm vị tỏi ớt.",
-    price: "120.000đ",
-    image: Nem,
-  },
-  {
-    id: 3,
-    name: "Giò me Nghệ An",
-    description: "Thơm mềm, béo ngậy, đậm vị thịt bê ướp gia vị.",
-    price: "280.000đ",
-    image: Gio,
-  },
-  {
-    id: 4,
-    name: "Mực một nắng",
-    description: "Săn chắc, thơm ngọt, giữ trọn hương vị biển.",
-    price: "320.000đ",
-    image: Muc,
-  },
-  {
-    id: 5,
-    name: "Bánh cốm làng Vòng",
-    description: "Dẻo thơm vị cốm non, ngọt bùi nhân đậu xanh.",
-    price: "68.000đ",
-    image: Com,
-  },
-  {
-    id: 6,
-    name: "Bánh Tét lá cẩm",
-    description:
-      "Nếp tím dẻo thơm, nhân đậu xanh thịt mỡ đậm vị Tết phương Nam.",
-    price: "78.000đ",
-    image: Tet,
-  },
-  {
-    id: 7,
-    name: "Kẹo dừa Bến Tre ",
-    description:
-      "Hoà quyện nước cốt dừa và mạch nha, tạo nên những viên kẹo vị ngọt nhẹ.",
-    price: "120.000đ",
-    image: Keo,
-  },
-  {
-    id: 8,
-    name: "Hạt điều rang muối",
-    description:
-      "Thơm giòn tự nhiên, vị mặn hài hòa, ăn vặt ngon miệng và bổ dưỡng.",
-    price: "160.000đ",
-    image: Hat,
-  },
-];
+import { useEffect, useState } from "react";
+import { getAllSanPham } from "@/api/product";
+import type { SanPham } from "@/types/product.type";
 
 export default function Product_special() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
   const navigate = useNavigate();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // LẤY 8 SẢN PHẨM BẤT KỲ TỪ CSDL
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        setLoading(true);
+        const data: SanPham[] = await getAllSanPham();
+
+        const formatted = data.map((item) => {
+          const giaSauGiam = item.Voucher
+            ? item.GiaBan * (1 - parseFloat(item.Voucher) / 100)
+            : item.GiaBan;
+
+          return {
+            id: item.MaSP,
+            name: item.TenSP,
+            description: item.MoTa?.slice(0, 100) + "..." || "Đặc sản nổi bật.",
+            price: Math.round(giaSauGiam),
+            originalPrice: item.GiaBan,
+            image: item.HinhAnh,
+          };
+        });
+
+        const featured = formatted.slice(0, 8);
+        setProducts(featured);
+      } catch (error) {
+        console.error("Lỗi khi lấy sản phẩm nổi bật:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  const handleBuyNow = (product: any) => {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+
+    if (!token && !user) {
+      alert("Vui lòng đăng nhập để mua hàng!");
+      navigate("/login");
+      return;
+    }
+
+    localStorage.removeItem("cart_checkout");
+
+    setTimeout(() => {
+      const buyNowItem = {
+        MaSP: product.id,
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        GiaBan: product.originalPrice,
+        hinhAnh: product.image,
+        quantity: 1,
+        checked: true,
+        buyNow: true,
+      };
+
+      localStorage.setItem("cart_checkout", JSON.stringify([buyNowItem]));
+      navigate("/checkout");
+    }, 50);
+  };
+
+  // === HOÀN TOÀN GIỐNG FILE Products.tsx ===
+  const getImageUrl = (hinhAnh: string | undefined) => {
+    if (!hinhAnh) return "/img-produce/default.jpg";
+    if (hinhAnh.startsWith("http")) return hinhAnh;
+    if (
+      hinhAnh.startsWith("/img-produce") ||
+      hinhAnh.startsWith("/img-introduce")
+    )
+      return hinhAnh;
+
+    const baseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    return `${baseUrl}${hinhAnh}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-gray-600">Đang tải sản phẩm nổi bật...</p>
+      </div>
+    );
+  }
 
   return (
     <div
-      className="bg-cover bg-center bg-no-repeat"
+      className="bg-cover bg-center bg-no-repeat py-12"
       ref={ref}
       style={{
         backgroundImage:
@@ -116,7 +134,7 @@ export default function Product_special() {
         </div>
       </motion.div>
 
-      {/* Mobile: grid 2 cột, PC: flex như cũ */}
+      {/* Grid sản phẩm */}
       <div className="grid grid-cols-2 gap-4 px-3 md:flex md:justify-center md:gap-8 md:flex-wrap">
         {products.map((product, index) => (
           <motion.div
@@ -129,38 +147,29 @@ export default function Product_special() {
             {/* Ảnh và nút */}
             <div className="relative overflow-hidden rounded-t-md">
               <img
-                src={product.image}
+                src={getImageUrl(product.image)}
                 alt={product.name}
                 className="w-full h-60 object-cover transform transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => {
+                  e.currentTarget.src = "/img-produce/default.jpg";
+                }}
               />
               <Button
                 variant="default"
-                className="absolute bottom-15 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold py-1 px-4 rounded-lg"
-                onClick={() => {
-                  const isLoggedIn =
-                    localStorage.getItem("token") ||
-                    localStorage.getItem("user");
-                  if (!isLoggedIn) {
-                    navigate("/login"); // nếu chưa đăng nhập
-                  } else {
-                    navigate("/product-detail"); // nếu đã đăng nhập
-                  }
-                }}
+                className="absolute bottom-15 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold py-1 px-4 rounded-lg bg-slate-700 hover:bg-slate-800"
+                onClick={() => handleBuyNow(product)}
               >
-                Mua hàng
+                Mua ngay
               </Button>
             </div>
 
             {/* Thông tin sản phẩm */}
             <div className="relative bg-[#8d7c8224] h-28 overflow-hidden flex items-center justify-center">
               <div className="text-center transition-all duration-500 transform group-hover:-translate-y-4">
-                <p className="font-semibold">{product.name}</p>
-                <p className="text-sm mt-1 text-gray-700">
-                  {product.description}
-                </p>
+                <p className="font-semibold text-2xl">{product.name}</p>
               </div>
-              <p className="absolute bottom-[-2rem] left-1/2 -translate-x-1/2 text-red-600 font-semibold opacity-0 group-hover:bottom-3 group-hover:opacity-100 transition-all duration-500">
-                {product.price}
+              <p className="absolute bottom-2 left-1/2 -translate-x-1/2 text-red-600 font-semibold opacity-0 group-hover:bottom-6 group-hover:opacity-100 transition-all duration-500">
+                {product.price.toLocaleString("vi-VN")}₫
               </p>
             </div>
           </motion.div>

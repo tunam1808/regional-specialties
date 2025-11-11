@@ -90,7 +90,7 @@ export default function AdminLayout() {
           </NavLink>
 
           <NavLink
-            to="/admin/statistics"
+            to="statistics"
             className={({ isActive }) =>
               `flex items-center gap-3 px-6 py-3 text-base hover:bg-green-600 transition ${
                 isActive ? "bg-green-600 font-semibold" : ""

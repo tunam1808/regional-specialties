@@ -18,6 +18,7 @@ import AccountManage from "@/assets/admin/account-manage";
 import FeedbackManage from "@/assets/admin/feedback-manage";
 import ProductsManage from "@/assets/admin/products-manage";
 import OrderManage from "@/assets/admin/order-manage";
+import Statistics from "@/assets/admin/statistics";
 import Cart from "@/assets/mini-component/cart-page";
 import Checkout from "@/assets/mini-component/Checkout";
 import CheckoutAfter from "@/assets/mini-component/checkout-after";
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="feedback-manage" element={<FeedbackManage />} />
           <Route path="products-manage" element={<ProductsManage />} />
           <Route path="order-manage" element={<OrderManage />} />
+          <Route path="statistics" element={<Statistics />} />
         </Route>
       </Routes>
     </Router>
