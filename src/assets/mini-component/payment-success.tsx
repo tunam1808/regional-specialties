@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { showSuccess, showError } from "@/common/toast";
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -8,25 +9,14 @@ export default function PaymentSuccess() {
 
   useEffect(() => {
     if (!orderId) {
-      // Nếu không có orderId → quay về trang chính
-      navigate("/");
+      showError("Không tìm thấy mã đơn hàng!");
+      navigate("/cart", { replace: true });
+      return;
     }
+
+    showSuccess(`Thanh toán PayPal thành công! Mã đơn: ${orderId}`);
+    navigate(`/orders/success/${orderId}`, { replace: true });
   }, [orderId, navigate]);
 
-  return (
-    <div className="max-w-xl mx-auto text-center py-20">
-      <h1 className="text-4xl font-bold text-green-600 mb-6">
-        Thanh toán thành công!
-      </h1>
-      <p className="text-lg">
-        Mã đơn hàng của bạn: <strong>{orderId}</strong>
-      </p>
-      <button
-        onClick={() => navigate("/orders")}
-        className="mt-6 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-      >
-        Xem đơn hàng
-      </button>
-    </div>
-  );
+  return null; // Không render gì
 }

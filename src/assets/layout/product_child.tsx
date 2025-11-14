@@ -166,13 +166,13 @@ const Products = () => {
   // THÊM VÀO GIỎ HÀNG THẬT
   const handleAddToCart = async (product: Product) => {
     if (!user?.id) {
-      alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
+      showError("Vui lòng đăng nhập để thêm vào giỏ hàng!");
       navigate("/login");
       return;
     }
 
     if ((product.soLuongTon ?? 0) <= 0) {
-      alert("Sản phẩm đã hết hàng!");
+      showError("Sản phẩm đã hết hàng!");
       return;
     }
 

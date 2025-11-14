@@ -500,13 +500,25 @@ export default function Checkout() {
       }
 
       if (paymentMethod === "paypal") {
-        const paypalRes = await createPayPalPayment(
-          total,
-          `Thanh toán đơn hàng #${res.MaDonHang}`
-        );
-        if (paypalRes?.approveLink) redirectToPayPal(paypalRes.approveLink);
-        else showError("Lỗi PayPal!");
-        return;
+        try {
+          const paypalRes = await createPayPalPayment(
+            total,
+            `Thanh toán đơn hàng #${res.MaDonHang}`
+          );
+
+          if (paypalRes?.approveLink) {
+            // CHỈ REDIRECT — KHÔNG LÀM GÌ KHÁC
+            window.location.href = paypalRes.approveLink;
+          } else {
+            showError("Lỗi tạo thanh toán PayPal!");
+          }
+          return;
+        } catch (err: any) {
+          showError(
+            err.response?.data?.message || "Thanh toán PayPal thất bại!"
+          );
+          return;
+        }
       }
 
       navigate(`/orders/success/${res.MaDonHang}`);

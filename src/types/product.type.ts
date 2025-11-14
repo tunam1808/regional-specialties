@@ -1,6 +1,6 @@
 // src/types/sanpham.types.ts
 export interface SanPham {
-  MaSP: number;
+  MaSP?: number;
   TenSP: string;
   HinhAnh?: string;
   GiaNhap?: number;

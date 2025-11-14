@@ -13,6 +13,8 @@ import {
 } from "recharts";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import * as XLSX from "xlsx";
+import { showError } from "@/common/toast";
 
 export default function RevenueChart() {
   const [data, setData] = useState<
@@ -207,6 +209,31 @@ export default function RevenueChart() {
     }
   };
 
+  // ======== XUẤT EXCEL =========
+  const exportToExcel = () => {
+    if (data.length === 0) {
+      showError("Không có dữ liệu để xuất.");
+      return;
+    }
+
+    const labelTitle =
+      type === "day" ? "Ngày" : type === "month" ? "Tháng" : "Năm";
+
+    const worksheet = XLSX.utils.json_to_sheet(
+      data.map((item) => ({
+        [labelTitle]: item.label,
+        "Doanh thu (₫)": item.revenue,
+        "Số đơn": item.orders,
+      }))
+    );
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "DoanhThu");
+
+    const periodTitle = getPeriodTitle() || "ToanBo";
+    XLSX.writeFile(workbook, `DoanhThu_${type}_${periodTitle}.xlsx`);
+  };
+
   return (
     <div className="p-4 bg-white shadow rounded-2xl">
       {/* Header + Bộ lọc */}
@@ -222,6 +249,13 @@ export default function RevenueChart() {
         </h2>
 
         <div className="flex flex-wrap gap-2 items-center">
+          <button
+            onClick={exportToExcel}
+            className="border px-3 py-1.5 rounded-md text-sm bg-green-100 hover:bg-green-200 transition"
+          >
+            Xuất Excel
+          </button>
+
           <select
             className="border px-3 py-1.5 rounded-md text-sm"
             value={type}

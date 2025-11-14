@@ -203,7 +203,7 @@ export default function Profile() {
     console.log("💾 [LOG] Bắt đầu update với payload:", formData);
     if (!user?.id) return;
     if (!formData.SoDienThoai || !/^\d{10,11}$/.test(formData.SoDienThoai)) {
-      alert("Số điện thoại phải là 10-11 chữ số!");
+      showError("Số điện thoại phải là 10-11 chữ số!");
       return;
     }
     if (
@@ -211,7 +211,7 @@ export default function Profile() {
       formData.DiaChiChiTiet.length < 5 ||
       formData.DiaChiChiTiet.length > 200
     ) {
-      alert("Địa chỉ chi tiết phải từ 5-200 ký tự!");
+      showError("Địa chỉ chi tiết phải từ 5-200 ký tự!");
       return;
     }
 

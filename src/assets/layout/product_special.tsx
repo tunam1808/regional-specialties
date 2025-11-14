@@ -5,6 +5,7 @@ import { useInView } from "react-intersection-observer";
 import { useEffect, useState } from "react";
 import { getAllSanPham } from "@/api/product";
 import type { SanPham } from "@/types/product.type";
+import { showError } from "@/common/toast";
 
 export default function Product_special() {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.2 });
@@ -51,7 +52,7 @@ export default function Product_special() {
     const user = localStorage.getItem("user");
 
     if (!token && !user) {
-      alert("Vui lòng đăng nhập để mua hàng!");
+      showError("Vui lòng đăng nhập để mua hàng!");
       navigate("/login");
       return;
     }

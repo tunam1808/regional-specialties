@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/button";
-import { getAllOrders, updateOrderStatus, deleteOrder } from "@/api/order"; // ĐÃ THÊM deleteOrder
+import { getAllOrders, updateOrderStatus, deleteOrder } from "@/api/order";
 import { showSuccess, showError } from "@/common/toast";
 import { FaCheckCircle, FaSpinner, FaTrashAlt } from "react-icons/fa";
+
+// Import Dialog Radix
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/dialog";
 
 interface Order {
   MaDonHang: string;
@@ -20,7 +31,11 @@ const OrderManage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null); // THÊM: Loading xóa
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // DIALOG XÁC NHẬN XÓA
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   // LẤY DANH SÁCH ĐƠN HÀNG
   const fetchOrders = async () => {
@@ -54,26 +69,36 @@ const OrderManage: React.FC = () => {
     }
   };
 
-  // XÓA ĐƠN HÀNG – TẤT CẢ TRẠNG THÁI ĐỀU XÓA ĐƯỢC
-  const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        `⚠️ Bạn có CHẮC chắn muốn XÓA đơn hàng #${id}?\n\nHành động này KHÔNG THỂ HOÀN TÁC!`
-      )
-    ) {
-      return;
-    }
+  // MỞ DIALOG XÁC NHẬN XÓA
+  const openDeleteDialog = (id: string) => {
+    setOrderToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // XÁC NHẬN XÓA
+  const confirmDelete = async () => {
+    if (!orderToDelete) return;
 
     try {
-      setDeletingId(id);
-      await deleteOrder(id);
-      showSuccess(`Đã xóa đơn hàng #${id} thành công!`);
-      setOrders((prev) => prev.filter((o) => o.MaDonHang !== id));
+      setDeletingId(orderToDelete);
+      await deleteOrder(orderToDelete);
+      showSuccess(`Đã xóa đơn hàng #${orderToDelete} thành công!`);
+      setOrders((prev) => prev.filter((o) => o.MaDonHang !== orderToDelete));
     } catch (error: any) {
       showError(error.response?.data?.message || "Xóa đơn hàng thất bại!");
     } finally {
       setDeletingId(null);
+      setIsDeleteDialogOpen(false);
+      setOrderToDelete(null);
     }
+  };
+
+  const formatCurrency = (value: string | number) => {
+    const num = Number(value) || 0;
+    return num.toLocaleString("vi-VN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
   };
 
   return (
@@ -126,8 +151,9 @@ const OrderManage: React.FC = () => {
                   <td className="px-4 py-2">{order.HoTen || "Khách lẻ"}</td>
                   <td className="px-4 py-2">{order.SoDienThoai || "-"}</td>
                   <td className="px-4 py-2 text-right font-bold text-green-600">
-                    {order.TongTien.toLocaleString("vi-VN")} ₫
+                    {formatCurrency(order.TongTien)} ₫
                   </td>
+
                   <td className="px-4 py-2 text-sm">{order.DiaChiGiaoHang}</td>
                   <td className="px-4 py-2 text-center text-xs">
                     <span
@@ -175,7 +201,7 @@ const OrderManage: React.FC = () => {
                         </Button>
                       )}
                       <Button
-                        onClick={() => handleDelete(order.MaDonHang)}
+                        onClick={() => openDeleteDialog(order.MaDonHang)}
                         disabled={deletingId === order.MaDonHang}
                         className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 flex items-center gap-1 rounded"
                       >
@@ -207,6 +233,48 @@ const OrderManage: React.FC = () => {
       <div className="mt-6 text-center text-sm text-gray-500">
         Tổng cộng: <strong>{orders.length}</strong> đơn hàng
       </div>
+
+      {/* DIALOG XÁC NHẬN XÓA */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 text-xl">
+              Xác nhận xóa đơn hàng
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-base">
+            Bạn có muốn xóa vĩnh viễn đơn hàng{" "}
+            <span className="font-mono text-indigo-600 font-bold">
+              #{orderToDelete}
+            </span>
+            ? <br />
+            <span className="text-red-600 font-semibold">
+              Hành động này không thể hoàn tác!
+            </span>
+          </DialogDescription>
+          <DialogFooter className="flex gap-3 sm:justify-end">
+            <DialogClose asChild>
+              <Button className="px-5 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition">
+                Hủy bỏ
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={confirmDelete}
+              disabled={deletingId === orderToDelete}
+              className="px-5 py-2 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl hover:from-red-600 hover:to-rose-700 transition disabled:opacity-50"
+            >
+              {deletingId === orderToDelete ? (
+                <>
+                  <FaSpinner className="animate-spin inline mr-2" />
+                  Đang xóa...
+                </>
+              ) : (
+                "Xóa vĩnh viễn"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
