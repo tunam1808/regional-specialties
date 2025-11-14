@@ -9,6 +9,7 @@ import type { SanPham } from "@/types/product.type";
 import { getAllSanPham } from "@/api/product";
 import logo from "@/assets/images/img-head-foot/logo.png";
 import search from "@/assets/icons/search.svg";
+import avt from "@/assets/images/default.jpg";
 
 export default function Header() {
   const [showHeader, setShowHeader] = useState(true);
@@ -28,7 +29,8 @@ export default function Header() {
 
   // Lấy user
   useEffect(() => {
-    const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const storedUser =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
@@ -58,32 +60,29 @@ export default function Header() {
   };
 
   // Tìm kiếm
-  const performSearch = useCallback(
-    async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        setShowResults(false);
-        setLoading(false);
-        return;
-      }
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowResults(false);
+      setLoading(false);
+      return;
+    }
 
-      setLoading(true);
-      try {
-        const data = await getAllSanPham();
-        const filtered = data
-          .filter((p) => p.TenSP.toLowerCase().includes(query.toLowerCase()))
-          .slice(0, 5);
-        setSearchResults(filtered);
-        setShowResults(true);
-      } catch (err) {
-        console.error("Lỗi tìm kiếm:", err);
-        setSearchResults([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+    setLoading(true);
+    try {
+      const data = await getAllSanPham();
+      const filtered = data
+        .filter((p) => p.TenSP.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 5);
+      setSearchResults(filtered);
+      setShowResults(true);
+    } catch (err) {
+      console.error("Lỗi tìm kiếm:", err);
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Debounce
   let searchTimeout: NodeJS.Timeout;
@@ -114,7 +113,11 @@ export default function Header() {
       <div className="w-full max-w-[1380px] mx-auto px-4 flex items-center h-20">
         {/* Logo */}
         <NavLink to="/">
-          <img src={logo} alt="Logo" className="h-20 object-contain cursor-pointer" />
+          <img
+            src={logo}
+            alt="Logo"
+            className="h-20 object-contain cursor-pointer"
+          />
         </NavLink>
 
         {/* Nav + Search Desktop */}
@@ -131,7 +134,9 @@ export default function Header() {
                 to={link.to}
                 className={({ isActive }) =>
                   `px-3 py-1 rounded-3xl transition ${
-                    isActive ? "bg-slate-700 text-white" : "text-gray-500 hover:text-black"
+                    isActive
+                      ? "bg-slate-700 text-white"
+                      : "text-gray-500 hover:text-black"
                   }`
                 }
               >
@@ -173,7 +178,7 @@ export default function Header() {
                         key={item.MaSP}
                         className="p-3 hover:bg-gray-50 cursor-pointer border-b flex items-center"
                         onClick={() => {
-                          navigate(`/products/${item.MaSP}`);
+                          navigate(`/product/${item.MaSP}`);
                           setSearchQuery("");
                           setShowResults(false);
                         }}
@@ -186,7 +191,9 @@ export default function Header() {
                     <div
                       className="p-3 text-center text-sm font-medium text-green-600 hover:bg-gray-50 cursor-pointer border-t"
                       onClick={() => {
-                        navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+                        navigate(
+                          `/products?search=${encodeURIComponent(searchQuery)}`
+                        );
                         setShowResults(false);
                       }}
                     >
@@ -220,7 +227,9 @@ export default function Header() {
                   alt="avatar"
                   className="w-10 h-10 rounded-full object-cover"
                 />
-                <span className="font-medium max-w-[160px] truncate">{user.fullname}</span>
+                <span className="font-medium max-w-[160px] truncate">
+                  {user.fullname}
+                </span>
               </button>
 
               {dropdownOpen && (
@@ -284,7 +293,10 @@ export default function Header() {
         </div>
 
         {/* Hamburger Mobile */}
-        <button className="md:hidden p-2 ml-auto" onClick={() => setMenuOpen(!menuOpen)}>
+        <button
+          className="md:hidden p-2 ml-auto"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
           {menuOpen ? <FaTimes size={28} /> : <FaBars size={28} />}
         </button>
       </div>
@@ -305,7 +317,9 @@ export default function Header() {
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `px-3 py-2 rounded-md transition ${
-                    isActive ? "bg-slate-700 text-white" : "text-gray-600 hover:bg-gray-100"
+                    isActive
+                      ? "bg-slate-700 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`
                 }
               >
@@ -337,7 +351,7 @@ export default function Header() {
                         key={item.MaSP}
                         className="p-3 hover:bg-gray-50 cursor-pointer border-b"
                         onClick={() => {
-                          navigate(`/products/${item.MaSP}`);
+                          navigate(`/product/${item.MaSP}`);
                           setSearchQuery("");
                           setShowResults(false);
                           setMenuOpen(false);
@@ -347,7 +361,9 @@ export default function Header() {
                       </div>
                     ))
                   ) : searchQuery ? (
-                    <p className="p-3 text-center text-gray-500">Không tìm thấy</p>
+                    <p className="p-3 text-center text-gray-500">
+                      Không tìm thấy
+                    </p>
                   ) : null}
                 </div>
               )}
@@ -365,16 +381,14 @@ export default function Header() {
                       src={
                         user?.avatar
                           ? `${import.meta.env.VITE_BASE_SERVER}${user.avatar}`
-<<<<<<< Updated upstream
                           : avt
-=======
-                          : "/default-avatar.jpg"
->>>>>>> Stashed changes
                       }
                       alt="avatar"
                       className="w-10 h-10 rounded-full object-cover"
                     />
-                    <span className="max-w-[240px] truncate">{user.fullname}</span>
+                    <span className="max-w-[240px] truncate">
+                      {user.fullname}
+                    </span>
                   </div>
                   {dropdownOpen && (
                     <div className="mt-2 bg-white shadow-lg rounded-md border">
