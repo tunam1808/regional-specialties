@@ -65,11 +65,11 @@ export default function AdminFeedbackPage() {
 
   return (
     <div className="mt-6">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-green-700 mb-4 text-center sm:text-left">
-        Danh sách đánh giá
-      </h2>
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-green-700 text-center sm:text-left w-full mb-4 ml-4 sm:mb-5">
+        Quản lý bài đánh giá
+      </h1>
 
-      <div className="p-6 sm:pl-6 pl-0">
+      <div className="px-0 sm:px-6 pl-0">
         {feedbacks.length === 0 ? (
           <p>Chưa có đánh giá nào.</p>
         ) : (

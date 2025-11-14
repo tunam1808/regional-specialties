@@ -44,7 +44,7 @@ export default function ProductDetail() {
         const profile = await getProfile();
         setUser({
           id: profile.id,
-          avatar: profile.avatar || avt, // fallback nếu chưa có
+          avatar: avt, // fallback nếu chưa có
         });
       } catch {
         setUser(null);
@@ -176,8 +176,10 @@ export default function ProductDetail() {
       <div className="mb-18">
         <Header />
       </div>
-      <div className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className="col-span-full -mb-4">
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Nút quay lại */}
+        <div className="mb-6">
           <Button
             className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-lg flex items-center gap-2"
             onClick={() => navigate(-1)}
@@ -186,93 +188,307 @@ export default function ProductDetail() {
           </Button>
         </div>
 
-        <div>
-          {/* Ảnh sản phẩm */}
-          <img
-            src={getImageUrl(product.HinhAnh)}
-            alt={product.TenSP}
-            className="w-full h-auto rounded-lg shadow-md object-cover"
-            onError={(e) => (e.currentTarget.src = "/no-image.png")}
-          />
+        {/* Grid chính */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* CỘT 1: ẢNH + ĐÁNH GIÁ + FORM (desktop: form co theo ảnh) */}
+          <div className="flex flex-col gap-6 order-1 md:order-1">
+            {/* Ảnh sản phẩm */}
+            <img
+              src={getImageUrl(product.HinhAnh)}
+              alt={product.TenSP}
+              className="w-full h-auto rounded-lg shadow-md object-cover"
+              onError={(e) => (e.currentTarget.src = "/no-image.png")}
+            />
 
-          {/* ===== Phần đánh giá nằm dưới ảnh ===== */}
-          <div className="mt-6 border-t pt-4">
-            <h2 className="text-xl font-semibold mb-2">Đánh giá sản phẩm</h2>
+            {/* ĐÁNH GIÁ (desktop) */}
+            <div className="hidden md:block border-t pt-6">
+              <h2 className="text-xl font-semibold mb-3">Đánh giá sản phẩm</h2>
+              {reviewsLoading ? (
+                <p>Đang tải đánh giá...</p>
+              ) : (
+                <>
+                  <p className="mb-3 text-lg">
+                    Điểm trung bình:{" "}
+                    <span className="font-bold">
+                      {(Number(averageRating.average_rating) || 0).toFixed(1)}
+                    </span>{" "}
+                    / 5 ({averageRating.total_reviews} đánh giá)
+                  </p>
 
-            {reviewsLoading ? (
-              <p>Đang tải đánh giá...</p>
-            ) : (
-              <>
-                <p className="mb-2">
-                  ⭐ Điểm trung bình:{" "}
-                  {(Number(averageRating.average_rating) || 0).toFixed(1)} / 5 (
-                  {averageRating.total_reviews} đánh giá)
-                </p>
-
-                {reviews.length === 0 ? (
-                  <p>Chưa có đánh giá nào.</p>
-                ) : (
-                  <div className="flex flex-col gap-4">
-                    {reviews.map((r) => (
-                      <div
-                        key={r.id}
-                        className="border p-3 rounded-lg bg-gray-50"
-                      >
-                        {/* Username + Avatar */}
-                        <div className="flex items-center gap-3 mb-1">
-                          <img
-                            src={
-                              user?.avatar
-                                ? `${import.meta.env.VITE_BASE_SERVER}${
-                                    user.avatar
-                                  }`
-                                : avt
-                            }
-                            alt={r.username}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                          <span className="font-medium">{r.username}</span>
+                  {reviews.length === 0 ? (
+                    <p className="text-gray-500">Chưa có đánh giá nào.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {reviews.map((r) => (
+                        <div
+                          key={r.id}
+                          className="border p-4 rounded-lg bg-gray-50"
+                        >
+                          <div className="flex items-center gap-3 mb-2">
+                            <img
+                              src={avt}
+                              alt={r.username}
+                              className="w-9 h-9 rounded-full object-cover"
+                            />
+                            <span className="font-medium">{r.username}</span>
+                          </div>
+                          <div className="flex items-center gap-1 mb-2">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span
+                                key={i}
+                                className={`text-lg ${
+                                  i < r.rating
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-gray-700">
+                            {r.comment || "Không có nhận xét"}
+                          </p>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
 
-                        {/* Rating dạng sao */}
-                        <div className="flex items-center gap-1 mb-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <span
-                              key={i}
-                              className={`text-sm ${
-                                i < r.rating
-                                  ? "text-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Comment */}
-                        <p className="text-gray-700">
-                          {r.comment || "Không có nhận xét"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
+              {/* FORM ĐÁNH GIÁ TRÊN DESKTOP – CO THEO CHIỀU RỘNG ẢNH */}
+              <div className="mt-6 border-t pt-6">
+                <h3 className="text-lg font-semibold mb-3">
+                  Viết đánh giá của bạn
+                </h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm">Đánh giá:</span>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`cursor-pointer text-2xl ${
+                        i < newRating ? "text-yellow-400" : "text-gray-300"
+                      }`}
+                      onClick={() => setNewRating(i + 1)}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <textarea
+                  className="w-full border rounded-lg p-3 mb-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Viết nhận xét của bạn..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                <Button
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+                  onClick={handleSubmitReview}
+                  disabled={submitting}
+                >
+                  {submitting ? "Đang gửi..." : "Gửi đánh giá"}
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* Form đánh giá mới */}
-          <div className="mt-6 border-t pt-4">
-            <h3 className="text-lg font-semibold mb-2">
+          {/* CỘT 2: THÔNG TIN + MÔ TẢ */}
+          <div className="flex flex-col gap-6 order-3 md:order-2">
+            {/* ... giữ nguyên phần thông tin, giá, nút mua ... */}
+            <div>
+              <h1 className="text-3xl font-bold mb-4">{product.TenSP}</h1>
+              <div className="space-y-2 text-gray-600 mb-4">
+                <p>Xuất xứ: {product.XuatXu || "Không rõ"}</p>
+                <p>Vùng miền: {product.VungMien}</p>
+                <p>Loại: {product.LoaiDoAn}</p>
+                <p>Hạn sử dụng: {product.HanSuDung || "Không có"}</p>
+              </div>
+
+              <div className="mb-6">
+                {product.Voucher && product.GiaSauGiam ? (
+                  <div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-3xl text-red-600 font-bold">
+                        {Number(product.GiaSauGiam).toLocaleString("vi-VN")}₫
+                      </span>
+                      <span className="text-lg text-gray-500 line-through">
+                        {Number(product.GiaBan).toLocaleString("vi-VN")}₫
+                      </span>
+                    </div>
+                    <p className="text-sm text-green-600 font-medium mt-1">
+                      Tiết kiệm:{" "}
+                      {Number(
+                        product.GiaBan - product.GiaSauGiam
+                      ).toLocaleString("vi-VN")}
+                      ₫
+                    </p>
+                  </div>
+                ) : (
+                  <span className="text-3xl text-green-700 font-bold">
+                    {Number(product.GiaBan).toLocaleString("vi-VN")}₫
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700 min-w-20">
+                    Số lượng:
+                  </label>
+                  <div className="flex items-center border rounded-lg overflow-hidden">
+                    <button
+                      onClick={() =>
+                        setQuantity((prev) => Math.max(1, prev - 1))
+                      }
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-lg font-bold disabled:opacity-50"
+                      disabled={quantity <= 1}
+                    >
+                      –
+                    </button>
+                    <input
+                      type="text"
+                      value={quantity}
+                      readOnly
+                      className="w-16 text-center py-2 border-x text-lg font-medium focus:outline-none"
+                    />
+                    <button
+                      onClick={() => setQuantity((prev) => prev + 1)}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-lg font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full bg-green-600 text-white hover:bg-green-700 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-transform active:scale-95"
+                  onClick={handleAddToCart}
+                  disabled={product.SoLuongTon === 0}
+                >
+                  <FaShoppingCart className="text-lg" />
+                  Thêm vào giỏ hàng
+                </Button>
+
+                <Button
+                  className="w-full bg-orange-600 text-white hover:bg-orange-700 py-3 rounded-lg font-semibold transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2"
+                  onClick={() => {
+                    if (!product) return;
+                    if (!user?.id) {
+                      showError("Vui lòng đăng nhập để mua ngay!");
+                      navigate("/login");
+                      return;
+                    }
+                    if (product.SoLuongTon === 0) {
+                      showError("Sản phẩm đã hết hàng!");
+                      return;
+                    }
+                    localStorage.removeItem("cart_checkout");
+                    setTimeout(() => {
+                      const buyNowItem = {
+                        MaSP: product.MaSP,
+                        id: product.MaSP,
+                        name: product.TenSP,
+                        price: product.GiaSauGiam || product.GiaBan,
+                        GiaBan: product.GiaBan,
+                        hinhAnh: product.HinhAnh,
+                        quantity: quantity,
+                        checked: true,
+                        buyNow: true,
+                      };
+                      localStorage.setItem(
+                        "cart_checkout",
+                        JSON.stringify([buyNowItem])
+                      );
+                      showSuccess("Đang chuyển đến thanh toán...");
+                      navigate("/checkout");
+                    }, 50);
+                  }}
+                  disabled={product.SoLuongTon === 0}
+                >
+                  Mua ngay
+                </Button>
+              </div>
+            </div>
+
+            {/* MÔ TẢ */}
+            <div>
+              <h2 className="text-xl font-semibold mb-3">Mô tả sản phẩm</h2>
+              <div
+                className="text-gray-700 leading-relaxed text-justify prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: product.MoTa || "Chưa có mô tả cho sản phẩm này.",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* PHẦN ĐÁNH GIÁ + FORM TRÊN MOBILE (full width) */}
+        <div className="md:hidden mt-10 border-t pt-6">
+          <h2 className="text-xl font-semibold mb-3">Đánh giá sản phẩm</h2>
+          {reviewsLoading ? (
+            <p>Đang tải đánh giá...</p>
+          ) : (
+            <>
+              <p className="mb-3 text-lg">
+                Điểm trung bình:{" "}
+                <span className="font-bold">
+                  {(Number(averageRating.average_rating) || 0).toFixed(1)}
+                </span>{" "}
+                / 5 ({averageRating.total_reviews} đánh giá)
+              </p>
+
+              {reviews.length === 0 ? (
+                <p className="text-gray-500">Chưa có đánh giá nào.</p>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((r) => (
+                    <div
+                      key={r.id}
+                      className="border p-4 rounded-lg bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <img
+                          src={avt}
+                          alt={r.username}
+                          className="w-9 h-9 rounded-full object-cover"
+                        />
+                        <span className="font-medium">{r.username}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span
+                            key={i}
+                            className={`text-lg ${
+                              i < r.rating ? "text-yellow-400" : "text-gray-300"
+                            }`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-gray-700">
+                        {r.comment || "Không có nhận xét"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Form trên mobile */}
+          <div className="mt-8 border-t pt-6">
+            <h3 className="text-lg font-semibold mb-3">
               Viết đánh giá của bạn
             </h3>
-            <div className="flex items-center mb-2">
-              <span className="mr-2">Đánh giá:</span>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm">Đánh giá:</span>
               {Array.from({ length: 5 }).map((_, i) => (
                 <span
                   key={i}
-                  className={`cursor-pointer text-xl ${
+                  className={`cursor-pointer text-2xl ${
                     i < newRating ? "text-yellow-400" : "text-gray-300"
                   }`}
                   onClick={() => setNewRating(i + 1)}
@@ -282,169 +498,23 @@ export default function ProductDetail() {
               ))}
             </div>
             <textarea
-              className="w-full border rounded p-2 mb-2"
+              className="w-full border rounded-lg p-3 mb-3 text-sm resize-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
               placeholder="Viết nhận xét..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
             />
             <Button
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium"
               onClick={handleSubmitReview}
               disabled={submitting}
             >
-              Gửi đánh giá
+              {submitting ? "Đang gửi..." : "Gửi đánh giá"}
             </Button>
-          </div>
-        </div>
-
-        {/* Thông tin sản phẩm */}
-        <div>
-          <h1 className="text-3xl font-semibold mb-4">{product.TenSP}</h1>
-
-          <p className="text-gray-600 mb-3">
-            Xuất xứ: {product.XuatXu || "Không rõ"}
-          </p>
-          <p className="text-gray-600 mb-3">Vùng miền: {product.VungMien}</p>
-          <p className="text-gray-600 mb-3">Loại: {product.LoaiDoAn}</p>
-          <p className="text-gray-600 mb-3">
-            Hạn sử dụng: {product.HanSuDung || "Không có"}
-          </p>
-
-          <div className="mt-4 mb-6">
-            {product.Voucher && product.GiaSauGiam ? (
-              <div>
-                <div>
-                  <span className="text-2xl text-red-600 font-bold mr-3">
-                    {Number(product.GiaSauGiam).toLocaleString("vi-VN", {
-                      maximumFractionDigits: 0,
-                    })}
-                    ₫
-                  </span>
-                  <span className="text-gray-500 line-through">
-                    {Number(product.GiaBan).toLocaleString("vi-VN", {
-                      maximumFractionDigits: 0,
-                    })}
-                    ₫
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Tiết kiệm:{" "}
-                  <span className="text-green-600 font-semibold">
-                    {Number(product.GiaBan - product.GiaSauGiam).toLocaleString(
-                      "vi-VN"
-                    )}
-                    ₫
-                  </span>
-                </p>
-              </div>
-            ) : (
-              <span className="text-2xl text-green-700 font-bold">
-                {Number(product.GiaBan).toLocaleString("vi-VN", {
-                  maximumFractionDigits: 0,
-                })}{" "}
-                ₫
-              </span>
-            )}
-          </div>
-
-          {/* Số lượng + Nút thêm vào giỏ + Mua ngay */}
-          <div className="flex flex-col gap-4 mb-6">
-            {/* Số lượng */}
-            <div className="flex items-center gap-3">
-              <label className="text-sm text-gray-700">Số lượng:</label>
-              <div className="flex items-center border rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-lg font-bold"
-                  disabled={quantity <= 1}
-                >
-                  –
-                </button>
-                <input
-                  type="text"
-                  value={quantity}
-                  readOnly
-                  className="w-14 text-center py-2 border-x text-lg font-medium appearance-none focus:outline-none"
-                />
-                <button
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-lg font-bold"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Thêm vào giỏ hàng – DÙNG API THẬT */}
-            <Button
-              className="w-full bg-green-600 text-white hover:bg-green-700 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-transform active:scale-95"
-              onClick={handleAddToCart}
-              disabled={product.SoLuongTon === 0}
-            >
-              <FaShoppingCart className="text-lg" />
-              Thêm vào giỏ hàng
-            </Button>
-
-            {/* MUA NGAY – KHÔNG THÊM VÀO GIỎ HÀNG THẬT */}
-            <Button
-              className="w-full bg-orange-600 text-white hover:bg-orange-700 py-3 rounded-lg font-semibold transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2"
-              onClick={() => {
-                if (!product) return;
-
-                if (!user?.id) {
-                  showError("Vui lòng đăng nhập để mua ngay!");
-                  navigate("/login");
-                  return;
-                }
-
-                if (product.SoLuongTon === 0) {
-                  showError("Sản phẩm đã hết hàng!");
-                  return;
-                }
-
-                // 🧹 Xóa hoàn toàn dữ liệu cũ
-                localStorage.removeItem("cart_checkout");
-
-                // 🕒 Đảm bảo xóa xong rồi mới ghi (đồng bộ)
-                setTimeout(() => {
-                  const buyNowItem = {
-                    MaSP: product.MaSP,
-                    id: product.MaSP,
-                    name: product.TenSP,
-                    price: product.GiaSauGiam || product.GiaBan,
-                    GiaBan: product.GiaBan,
-                    hinhAnh: product.HinhAnh,
-                    quantity: quantity,
-                    checked: true,
-                    buyNow: true, // ✅ cờ quan trọng
-                  };
-
-                  localStorage.setItem(
-                    "cart_checkout",
-                    JSON.stringify([buyNowItem])
-                  );
-
-                  showSuccess("Đang chuyển đến thanh toán...");
-                  navigate("/checkout");
-                }, 50);
-              }}
-              disabled={product.SoLuongTon === 0}
-            >
-              Mua ngay
-            </Button>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Mô tả sản phẩm:</h2>
-            <div
-              className="text-gray-700 leading-relaxed text-justify"
-              dangerouslySetInnerHTML={{
-                __html: product.MoTa || "Chưa có mô tả cho sản phẩm này.",
-              }}
-            />
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );

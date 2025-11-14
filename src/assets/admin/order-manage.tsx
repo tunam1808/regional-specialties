@@ -102,18 +102,11 @@ const OrderManage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-screen-xl mx-auto">
+    <div className="px-0 sm:px-6 py-6 max-w-screen-xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-green-700">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-green-700 text-center sm:text-left w-full mb-3 sm:mb-0">
           Quản lý đơn hàng
-        </h2>
-        <Button
-          onClick={fetchOrders}
-          disabled={loading}
-          className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2 px-4 py-2 rounded"
-        >
-          {loading ? <FaSpinner className="animate-spin" /> : "↻"} Làm mới
-        </Button>
+        </h1>
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">

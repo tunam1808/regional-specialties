@@ -235,147 +235,164 @@ export default function RevenueChart() {
   };
 
   return (
-    <div className="p-4 bg-white shadow rounded-2xl">
-      {/* Header + Bộ lọc */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
-        <h2 className="text-xl font-semibold">
-          Thống kê doanh thu theo{" "}
-          {type === "day" ? "ngày" : type === "month" ? "tháng" : "năm"}
-          {selectedDate && (
-            <span className="text-base font-normal text-gray-600 ml-2">
-              ({getPeriodTitle()})
-            </span>
-          )}
-        </h2>
+    <div className="flex flex-col h-screen bg-gray-50 p-4">
+      <div className="flex-1 flex flex-col bg-white shadow rounded-2xl overflow-hidden">
+        {/* HEADER - Cố định, gọn gàng */}
+        <div className="p-3 sm:p-4 border-b flex-shrink-0">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-lg sm:text-xl font-semibold text-center sm:text-left">
+              Thống kê doanh thu theo{" "}
+              {type === "day" ? "ngày" : type === "month" ? "tháng" : "năm"}
+              {selectedDate && (
+                <span
+                  className="block sm:inline text-sm font-normal text-gray-600 
+                     mt-1 sm:mt-0 sm:ml-1"
+                >
+                  ({getPeriodTitle()})
+                </span>
+              )}
+            </h2>
 
-        <div className="flex flex-wrap gap-2 items-center">
-          <button
-            onClick={exportToExcel}
-            className="border px-3 py-1.5 rounded-md text-sm bg-green-100 hover:bg-green-200 transition"
-          >
-            Xuất Excel
-          </button>
+            <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start text-xs">
+              <button
+                onClick={exportToExcel}
+                className="px-3 py-1.5 rounded-md bg-green-100 hover:bg-green-200 transition whitespace-nowrap"
+              >
+                Xuất Excel
+              </button>
 
-          <select
-            className="border px-3 py-1.5 rounded-md text-sm"
-            value={type}
-            onChange={(e) => {
-              const newType = e.target.value as "day" | "month" | "year";
-              setType(newType);
-              resetFilter();
-            }}
-          >
-            <option value="day">Ngày</option>
-            <option value="month">Tháng</option>
-            <option value="year">Năm</option>
-          </select>
+              <select
+                className="px-3 py-1.5 rounded-md border text-xs"
+                value={type}
+                onChange={(e) => {
+                  const newType = e.target.value as "day" | "month" | "year";
+                  setType(newType);
+                  resetFilter();
+                }}
+              >
+                <option value="day">Ngày</option>
+                <option value="month">Tháng</option>
+                <option value="year">Năm</option>
+              </select>
 
-          <button
-            onClick={resetFilter}
-            className="border px-3 py-1.5 rounded-md text-sm bg-gray-100 hover:bg-gray-200 transition"
-          >
-            Reset
-          </button>
+              <button
+                onClick={resetFilter}
+                className="px-3 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 transition whitespace-nowrap"
+              >
+                Reset
+              </button>
 
-          {type === "day" && (
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
-              placeholderText="Chọn ngày"
-              dateFormat="dd/MM/yyyy"
-              className="border px-3 py-1.5 rounded-md text-sm w-40"
-              isClearable
-            />
-          )}
+              {/* DatePicker responsive */}
+              {type === "day" && (
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date) => setSelectedDate(date)}
+                  placeholderText="Chọn ngày"
+                  dateFormat="dd/MM/yyyy"
+                  className="px-3 py-1.5 rounded-md border text-xs w-full sm:w-36"
+                  isClearable
+                />
+              )}
+              {type === "month" && (
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date) => setSelectedDate(date)}
+                  dateFormat="MM/yyyy"
+                  showMonthYearPicker
+                  placeholderText="Chọn tháng"
+                  className="px-3 py-1.5 rounded-md border text-xs w-full sm:w-32"
+                  isClearable
+                />
+              )}
+              {type === "year" && (
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date) => setSelectedDate(date)}
+                  dateFormat="yyyy"
+                  showYearPicker
+                  placeholderText="Chọn năm"
+                  className="px-3 py-1.5 rounded-md border text-xs w-full sm:w-28"
+                  isClearable
+                />
+              )}
+            </div>
+          </div>
+        </div>
 
-          {type === "month" && (
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
-              dateFormat="MM/yyyy"
-              showMonthYearPicker
-              placeholderText="Chọn tháng"
-              className="border px-3 py-1.5 rounded-md text-sm w-32"
-              isClearable
-            />
-          )}
-
-          {type === "year" && (
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
-              dateFormat="yyyy"
-              showYearPicker
-              placeholderText="Chọn năm"
-              className="border px-3 py-1.5 rounded-md text-sm w-28"
-              isClearable
-            />
+        {/* CHART - Full height, scroll ngang nếu cần */}
+        <div className="flex-1 min-h-0 p-2 sm:p-4">
+          {data.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-gray-500 text-center px-4 text-sm">
+              {selectedDate ? (
+                <>Không có dữ liệu cho kỳ đã chọn</>
+              ) : (
+                <>Vui lòng chọn một kỳ để xem thống kê</>
+              )}
+            </div>
+          ) : (
+            <div className="h-full overflow-x-auto overflow-y-hidden">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={data}
+                  margin={{ top: 10, right: 15, left: 10, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="label"
+                    angle={-45}
+                    textAnchor="end"
+                    height={70}
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    tickFormatter={(v) => v.toLocaleString("vi-VN")}
+                    label={{
+                      value: "Doanh thu (₫)",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                    width={100}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    label={{
+                      value: "Số đơn",
+                      angle: 90,
+                      position: "insideRight",
+                    }}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <Tooltip
+                    formatter={(value: number, name: string) =>
+                      name === "Doanh thu"
+                        ? [`${value.toLocaleString("vi-VN")} ₫`, name]
+                        : [value, name]
+                    }
+                    contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="revenue"
+                    name="Doanh thu"
+                    fill="#8884d8"
+                  />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="orders"
+                    name="Số đơn"
+                    fill="#82ca9d"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Biểu đồ */}
-      {data.length === 0 ? (
-        <div className="text-center py-20 text-gray-500">
-          {selectedDate ? (
-            <>Không có dữ liệu cho kỳ đã chọn</>
-          ) : (
-            <>Vui lòng chọn một kỳ để xem thống kê</>
-          )}
-        </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={550}>
-          <BarChart
-            data={data}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="label" />
-            <YAxis
-              yAxisId="left"
-              tickFormatter={(v) => v.toLocaleString("vi-VN")}
-              label={{
-                value: "Doanh thu (₫)",
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              width={100}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              label={{
-                value: "Số đơn",
-                angle: 90,
-                position: "insideRight",
-                style: { textAnchor: "middle" },
-              }}
-            />
-            <Tooltip
-              formatter={(value: number, name: string) =>
-                name === "Doanh thu"
-                  ? [`${value.toLocaleString("vi-VN")} ₫`, name]
-                  : [value, name]
-              }
-              contentStyle={{ borderRadius: "8px", fontSize: "14px" }}
-            />
-            <Legend />
-            <Bar
-              yAxisId="left"
-              dataKey="revenue"
-              name="Doanh thu"
-              fill="#8884d8"
-            />
-            <Bar
-              yAxisId="right"
-              dataKey="orders"
-              name="Số đơn"
-              fill="#82ca9d"
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      )}
     </div>
   );
 }
