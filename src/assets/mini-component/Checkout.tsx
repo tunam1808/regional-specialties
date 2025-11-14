@@ -21,7 +21,7 @@ import {
   getOrderById,
   updateOrderStatus,
 } from "@/api/order";
-import { createPayPalPayment, redirectToPayPal } from "@/api/payment";
+import { createPayPalPayment } from "@/api/payment";
 
 interface CartItem {
   MaSP: number;
