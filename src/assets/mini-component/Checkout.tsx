@@ -22,6 +22,7 @@ import {
   updateOrderStatus,
 } from "@/api/order";
 import { createPayPalPayment } from "@/api/payment";
+import Map from "@/assets/small-function/google-map"; // đường dẫn đến component Map của bạn
 
 interface CartItem {
   MaSP: number;
@@ -98,6 +99,9 @@ export default function Checkout() {
 
   const navigate = useNavigate();
   const isCheckingRef = useRef(false);
+
+  const [latitude, setLatitude] = useState<number | undefined>(undefined);
+  const [longitude, setLongitude] = useState<number | undefined>(undefined);
 
   /* ========================================================================== */
   /*  TỰ ĐỘNG KIỂM TRA TRẠNG THÁI ĐƠN HÀNG KHI MỞ MODAL QR                     */
@@ -233,6 +237,8 @@ export default function Checkout() {
         if (profile.DiaChiDayDu && provinces.length > 0) {
           parseAddressFromProfile(profile.DiaChiDayDu);
         }
+        setLatitude(profile.Latitude);
+        setLongitude(profile.Longitude);
       } catch (err) {
         console.error("Lỗi lấy profile:", err);
       } finally {
@@ -585,6 +591,102 @@ export default function Checkout() {
                   <p className="p-2 bg-gray-50 rounded">
                     {customer.address || "Chưa cập nhật"}
                   </p>
+                </div>
+
+                <div className="my-4">
+                  <label className="block font-medium mb-2 text-gray-700">
+                    Vị trí giao hàng (kéo thả để chọn)
+                  </label>
+                  <div className="w-full h-80 rounded-xl overflow-hidden shadow-md border">
+                    <Map
+                      latitude={latitude}
+                      longitude={longitude}
+                      zoom={16}
+                      onPositionChange={(lat, lng, address) => {
+                        setLatitude(lat);
+                        setLongitude(lng);
+                        if (address) {
+                          setCustomer((prev) => ({ ...prev, address }));
+                        }
+                      }}
+                    />
+                    {/* Địa chỉ tự động cập nhật */}
+                    {customer.address && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                        <p className="text-sm font-medium text-blue-800">
+                          Địa chỉ giao hàng:
+                        </p>
+                        <p className="text-sm text-indigo-900 break-words">
+                          {customer.address}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hiển thị tọa độ realtime */}
+                  {(latitude || longitude) && (
+                    <p className="text-sm text-gray-600 mt-2 text-center">
+                      Vị trí: {latitude?.toFixed(6)}, {longitude?.toFixed(6)}
+                    </p>
+                  )}
+
+                  {/* Nút lấy vị trí hiện tại */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!navigator.geolocation) {
+                        showError("Trình duyệt không hỗ trợ định vị!");
+                        return;
+                      }
+
+                      showSuccess("Đang lấy vị trí...");
+
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          const lat = pos.coords.latitude;
+                          const lng = pos.coords.longitude;
+                          setLatitude(lat);
+                          setLongitude(lng);
+                          showSuccess(
+                            `Vị trí: ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+                          );
+                        },
+                        (err) => {
+                          let msg = "Không thể lấy vị trí: ";
+                          if (err.code === 1)
+                            msg +=
+                              "Bạn đã từ chối. Vui lòng bật trong cài đặt.";
+                          else if (err.code === 2) msg += "Không tìm thấy GPS.";
+                          else if (err.code === 3) msg += "Hết thời gian chờ.";
+                          else msg += "Lỗi không xác định.";
+                          showError(msg);
+                        },
+                        { enableHighAccuracy: true, timeout: 15000 }
+                      );
+                    }}
+                    className="mt-3 w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 flex items-center justify-center gap-2 font-medium shadow-md transition-all"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    Dùng vị trí hiện tại
+                  </button>
                 </div>
                 <button
                   type="button"

@@ -76,7 +76,7 @@ export default function CustomerReviews() {
                 <Card className="rounded-xl shadow-md hover:shadow-xl transition h-64 flex">
                   <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-3">
                     <img
-                      src={review.avatar || avt}
+                      src={avt}
                       alt={review.fullname}
                       className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                     />
