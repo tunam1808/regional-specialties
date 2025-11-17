@@ -47,7 +47,7 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       const res = await forgotPassword(email); // gọi API gửi email
-      showSuccess(res.message, { duration: 3000 });
+      showSuccess(res.message);
       setEmail("");
 
       // ✅ Chuyển sang trang reset-password sau 1 giây
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
         navigate(`/reset-password?email=${encodeURIComponent(email)}`);
       }, 1000);
     } catch (err: any) {
-      showError(err.message || "Gửi email thất bại!", { duration: 3000 });
+      showError(err.message || "Gửi email thất bại!");
     } finally {
       setLoading(false);
     }
