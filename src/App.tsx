@@ -24,6 +24,8 @@ import Checkout from "@/assets/mini-component/Checkout";
 import CheckoutAfter from "@/assets/mini-component/checkout-after";
 import OrderDetail from "@/assets/mini-component/order-detail";
 import PaymentSuccess from "@/assets/mini-component/payment-success";
+import ForgotPassword from "@/assets/mini-component/forgot-password";
+import ResetPassword from "@/assets/mini-component/reset-password";
 
 export default function App() {
   return (
@@ -52,6 +54,8 @@ export default function App() {
         <Route path="/orders/success/:id" element={<CheckoutAfter />} />
         <Route path="/orders/:id" element={<OrderDetail />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         {/*Trang quản lý của admin */}
         <Route path="/manage-page" element={<AdminPage />}>
           <Route index element={<AccountManage />} />

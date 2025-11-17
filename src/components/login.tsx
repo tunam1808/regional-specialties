@@ -174,19 +174,31 @@ function Login() {
               </span>
             </div>
           </div>
+          {/* Quên mật khẩu + Remember me */}
+          <div className="flex items-center justify-between mb-4">
+            {/* Remember me lùi vào */}
+            <div className="flex items-center gap-2 pl-10">
+              <input
+                type="checkbox"
+                id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              />
+              <label htmlFor="remember" className="text-sm text-gray-700">
+                Ghi nhớ đăng nhập
+              </label>
+            </div>
 
-          {/* Remember me */}
-          <div className="checkbox-container flex items-center gap-2 pl-36">
-            <input
-              type="checkbox"
-              id="remember"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-            />
-            <label htmlFor="remember" className="text-sm text-gray-700">
-              Ghi nhớ đăng nhập
-            </label>
+            {/* Link quên mật khẩu */}
+            <div>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-green-600 hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
           </div>
 
           {/* Submit */}
