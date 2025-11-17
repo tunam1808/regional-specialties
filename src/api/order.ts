@@ -6,6 +6,8 @@ export interface CheckoutData {
   GhiChu?: string;
   DiaChiGiaoHang: string;
   SanPhamDaChon: number[];
+  KhoangCach?: number | null; // THÊM
+  PhiShip?: number; // THÊM
 }
 
 // Thanh toán – KHÔNG truyền user_id
@@ -29,6 +31,8 @@ export const checkoutDirectly = async (data: {
     SoLuong: number;
     GiaBanTaiThoiDiem: number;
   }[];
+  KhoangCach?: number | null; // ← THÊM
+  PhiShip?: number;
 }) => {
   try {
     const res = await api.post("/orders/direct", data);

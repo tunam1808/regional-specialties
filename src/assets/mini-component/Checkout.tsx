@@ -22,7 +22,20 @@ import {
   updateOrderStatus,
 } from "@/api/order";
 import { createPayPalPayment } from "@/api/payment";
-import Map from "@/assets/small-function/google-map"; // đường dẫn đến component Map của bạn
+import Map from "@/assets/small-function/google-map";
+import { buildFullAddressForCenter } from "@/utils/address"; // Tự động nhảy đến tọa độ địa chỉ chính xác của bạn
+import { geocodeAddress } from "@/utils/geocode";
+import {
+  SHOP_LOCATION,
+  calculateDistance,
+  calculateShippingFee,
+} from "@/utils/distance";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog";
 
 interface CartItem {
   MaSP: number;
@@ -34,6 +47,7 @@ interface CartItem {
   quantity: number;
   checked?: boolean;
   buyNow?: boolean;
+  type: "Tại chỗ" | "Đồ khô";
 }
 
 interface Customer {
@@ -50,6 +64,8 @@ interface Province {
 interface Ward {
   id: string;
   name: string;
+  idProvince: string; // ← Thêm
+  idCommune: string;
 }
 
 interface QrModalData {
@@ -102,6 +118,8 @@ export default function Checkout() {
 
   const [latitude, setLatitude] = useState<number | undefined>(undefined);
   const [longitude, setLongitude] = useState<number | undefined>(undefined);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [distanceError, setDistanceError] = useState<string | null>(null);
 
   /* ========================================================================== */
   /*  TỰ ĐỘNG KIỂM TRA TRẠNG THÁI ĐƠN HÀNG KHI MỞ MODAL QR                     */
@@ -146,7 +164,9 @@ export default function Checkout() {
   useEffect(() => {
     const loadCart = () => {
       const raw = localStorage.getItem("cart_checkout");
+      console.log("RAW CART_CHECKOUT:", raw);
       if (!raw || raw === "[]" || raw === "null" || raw.trim() === "") {
+        console.log("CART_CHECKOUT RỖNG HOẶC NULL → KHÔNG LOAD", { raw });
         localStorage.removeItem("cart_checkout");
         setCart([]);
         setIsBuyNow(false);
@@ -174,6 +194,7 @@ export default function Checkout() {
             quantity: item.quantity || 1,
             checked: true,
             buyNow: true,
+            type: item.LoaiDoAn === "Tại chỗ" ? "Tại chỗ" : "Đồ khô",
           };
           setCart([cleanItem]);
           return;
@@ -190,8 +211,14 @@ export default function Checkout() {
           quantity: item.quantity || 1,
           checked: item.checked ?? true,
           buyNow: item.buyNow ?? false,
+          type: item.LoaiDoAn === "Tại chỗ" ? "Tại chỗ" : "Đồ khô",
         }));
+
         setCart(normalized);
+        console.log(
+          "CART TYPES:",
+          normalized.map((item) => ({ name: item.name, type: item.type }))
+        );
       } catch (err) {
         console.error("Lỗi parse cart_checkout:", err);
         localStorage.removeItem("cart_checkout");
@@ -237,8 +264,8 @@ export default function Checkout() {
         if (profile.DiaChiDayDu && provinces.length > 0) {
           parseAddressFromProfile(profile.DiaChiDayDu);
         }
-        setLatitude(profile.Latitude);
-        setLongitude(profile.Longitude);
+        setLatitude(profile.Latitude ? Number(profile.Latitude) : undefined);
+        setLongitude(profile.Longitude ? Number(profile.Longitude) : undefined);
       } catch (err) {
         console.error("Lỗi lấy profile:", err);
       } finally {
@@ -401,6 +428,66 @@ export default function Checkout() {
   };
 
   /* ========================================================================== */
+  /*  8. TỰ ĐỘNG NHẢY VÀO TRUNG TÂM PHƯỜNG/XÃ (DÙNG NOMINATIM - MIỄN PHÍ)       */
+  /* ========================================================================== */
+  useEffect(() => {
+    // ƯU TIÊN: Dùng tọa độ từ profile nếu có
+    if (latitude != null && longitude != null) return;
+
+    // Chỉ chạy khi có phường + tỉnh (không cần địa chỉ chi tiết)
+    if (!selectedPhuongXa || !selectedTinhThanh) return;
+    if (provinces.length === 0 || wards.length === 0) return;
+
+    const centerAddress = buildFullAddressForCenter(
+      selectedPhuongXa,
+      provinces,
+      wards
+    );
+
+    if (!centerAddress) return;
+
+    let isMounted = true;
+
+    const fetchCenter = async () => {
+      const coords = await geocodeAddress(centerAddress);
+      if (isMounted && coords) {
+        setLatitude(coords.lat);
+        setLongitude(coords.lng);
+      }
+    };
+
+    fetchCenter();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    selectedPhuongXa,
+    selectedTinhThanh,
+    provinces,
+    wards,
+    latitude,
+    longitude,
+  ]);
+
+  useEffect(() => {
+    if (latitude != null && longitude != null) {
+      const dist = calculateDistance(
+        SHOP_LOCATION.latitude,
+        SHOP_LOCATION.longitude,
+        latitude,
+        longitude
+      );
+      const rounded = Number(dist.toFixed(2));
+      console.log("[Distance] Updated:", rounded, "km"); // DEBUG
+      setDistance(rounded);
+    } else {
+      console.log("[Distance] Cleared: no coords");
+      setDistance(null);
+    }
+  }, [latitude, longitude]);
+
+  /* ========================================================================== */
   /*  TÍNH TIỀN + HÌNH ẢNH                                                       */
   /* ========================================================================== */
   const total = cart.reduce(
@@ -408,6 +495,13 @@ export default function Checkout() {
       sum + Number(item.price || item.GiaBan) * Number(item.quantity),
     0
   );
+
+  // TÍNH PHÍ SHIP + TỔNG CUỐI
+  const shippingFee =
+    latitude != null && longitude != null && distance !== null
+      ? calculateShippingFee(latitude, longitude)
+      : 0;
+  const finalTotal = total + shippingFee;
 
   const getImageUrl = (hinhAnh?: string) => {
     if (!hinhAnh) return "/img-produce/default.jpg";
@@ -443,10 +537,39 @@ export default function Checkout() {
       return;
     }
 
-    const selectedItems = cart.filter((item) => item.checked);
+    // MUA NGAY: luôn chọn, GIỎ HÀNG: chỉ chọn checked
+    const selectedItems = cart.filter((item) =>
+      isBuyNow ? true : item.checked
+    );
+
     if (selectedItems.length === 0) {
       showError("Vui lòng chọn sản phẩm!");
       return;
+    }
+    // KIỂM TRA: Nếu có sản phẩm "Tại chỗ" nhưng khoảng cách > 2km → LỖI
+    // KIỂM TRA: Nếu có "Tại chỗ" → PHẢI có tọa độ + <= 2km
+    const hasTaiCho = selectedItems.some((item) => item.type === "Tại chỗ");
+    if (hasTaiCho) {
+      if (latitude == null || longitude == null) {
+        showError("Vui lòng chọn vị trí giao hàng chính xác trên bản đồ!");
+        return;
+      }
+      if (
+        distance === null ||
+        typeof distance !== "number" ||
+        isNaN(distance)
+      ) {
+        showError("Không thể tính khoảng cách. Vui lòng chọn lại vị trí!");
+        return;
+      }
+      if (distance > 2) {
+        setDistanceError(
+          `Sản phẩm "Tại chỗ" chỉ giao trong vòng 2km! \nKhoảng cách hiện tại của bạn là: ${distance.toFixed(
+            1
+          )}km\n Bạn vui lòng chọn "Đồ khô" giúp Shop nha. \nXin lỗi vì sự bất tiện này!`
+        );
+        return;
+      }
     }
 
     const orderItems = selectedItems.map((item) => ({
@@ -470,6 +593,8 @@ export default function Checkout() {
           GhiChu:
             paymentMethod === "cod" ? "Thanh toán khi nhận hàng" : "Mua ngay",
           items: orderItems,
+          KhoangCach: hasTaiCho ? distance! : distance ?? 0, // ← GỬI KHOẢNG CÁCH
+          PhiShip: shippingFee,
         });
       } else {
         res = await checkoutCart({
@@ -482,6 +607,8 @@ export default function Checkout() {
           DiaChiGiaoHang: customer.address,
           GhiChu: "Thanh toán khi nhận hàng",
           SanPhamDaChon: selectedItems.map((sp) => sp.MaSP),
+          KhoangCach: hasTaiCho ? distance! : distance ?? 0, // ← GỬI KHOẢNG CÁCH
+          PhiShip: shippingFee, // ← GỬI PHÍ SHIP
         });
       }
 
@@ -592,41 +719,74 @@ export default function Checkout() {
                     {customer.address || "Chưa cập nhật"}
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={openEditModal}
+                  className="w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center gap-2"
+                >
+                  <FaEdit /> Chỉnh sửa thông tin
+                </button>
 
                 <div className="my-4">
                   <label className="block font-medium mb-2 text-gray-700">
-                    Vị trí giao hàng (kéo thả để chọn)
+                    Vị trí nhận hàng chính xác (kéo thả để chọn)
                   </label>
-                  <div className="w-full h-80 rounded-xl overflow-hidden shadow-md border">
-                    <Map
-                      latitude={latitude}
-                      longitude={longitude}
-                      zoom={16}
-                      onPositionChange={(lat, lng, address) => {
-                        setLatitude(lat);
-                        setLongitude(lng);
-                        if (address) {
-                          setCustomer((prev) => ({ ...prev, address }));
-                        }
-                      }}
-                    />
-                    {/* Địa chỉ tự động cập nhật */}
-                    {customer.address && (
-                      <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                        <p className="text-sm font-medium text-blue-800">
-                          Địa chỉ giao hàng:
-                        </p>
-                        <p className="text-sm text-indigo-900 break-words">
-                          {customer.address}
-                        </p>
+
+                  {/* PHẦN QUAN TRỌNG NHẤT - BỌC BẢN ĐỒ + TẮT KHI CÓ MODAL */}
+                  <div className="relative w-full h-80 rounded-xl overflow-hidden shadow-md border">
+                    {/* LỚP PHỦ DỄ THƯƠNG KHI CÓ MODAL MỞ (làm bản đồ không click được + mờ đi) */}
+                    {(isModalOpen || isQrModalOpen || !!distanceError) && (
+                      <div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+                        <div className="bg-white/95 px-8 py-4 rounded-2xl shadow-2xl animate-pulse">
+                          <p className="text-pink-600 font-bold text-lg flex items-center gap-3">
+                            <span>✨</span> <span>✨</span>
+                          </p>
+                        </div>
                       </div>
                     )}
+
+                    {/* BẢN ĐỒ THẬT - TẮT TƯƠNG TÁC KHI CÓ MODAL */}
+                    <div
+                      className={`
+      w-full h-full
+      ${
+        isModalOpen || isQrModalOpen || !!distanceError
+          ? "pointer-events-none opacity-65"
+          : "pointer-events-auto"
+      }
+    `}
+                    >
+                      <Map
+                        latitude={latitude}
+                        longitude={longitude}
+                        zoom={16}
+                        onPositionChange={(lat, lng, address) => {
+                          setLatitude(lat);
+                          setLongitude(lng);
+                          if (address) {
+                            setCustomer((prev) => ({ ...prev, address }));
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
 
+                  {/* Địa chỉ tự động cập nhật */}
+                  {/* {customer.address && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                      <p className="text-sm font-medium text-blue-800">
+                        Địa chỉ giao hàng:
+                      </p>
+                      <p className="text-sm text-indigo-900 break-words">
+                        {customer.address}
+                      </p>
+                    </div>
+                  )} */}
+
                   {/* Hiển thị tọa độ realtime */}
-                  {(latitude || longitude) && (
+                  {latitude != null && longitude != null && (
                     <p className="text-sm text-gray-600 mt-2 text-center">
-                      Vị trí: {latitude?.toFixed(6)}, {longitude?.toFixed(6)}
+                      Vị trí: {latitude.toFixed(6)}, {longitude.toFixed(6)}
                     </p>
                   )}
 
@@ -638,9 +798,7 @@ export default function Checkout() {
                         showError("Trình duyệt không hỗ trợ định vị!");
                         return;
                       }
-
                       showSuccess("Đang lấy vị trí...");
-
                       navigator.geolocation.getCurrentPosition(
                         (pos) => {
                           const lat = pos.coords.latitude;
@@ -687,14 +845,60 @@ export default function Checkout() {
                     </svg>
                     Dùng vị trí hiện tại
                   </button>
+
+                  {/* NÚT CẬP NHẬT VỊ TRÍ ĐÃ CHỌN */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (latitude == null || longitude == null) {
+                        showError("Chưa có tọa độ để cập nhật!");
+                        return;
+                      }
+                      if (!userId) {
+                        showError("Không tìm thấy thông tin người dùng!");
+                        return;
+                      }
+                      try {
+                        await updateUser(userId, {
+                          Latitude: latitude,
+                          Longitude: longitude,
+                        });
+                        showSuccess("Cập nhật vị trí thành công!");
+                      } catch (err: any) {
+                        const msg = err.message || "Lỗi cập nhật";
+                        if (msg.includes("Token") || msg.includes("hết hạn")) {
+                          showError("Phiên đăng nhập hết hạn!");
+                          localStorage.clear();
+                          sessionStorage.clear();
+                          navigate("/login");
+                        } else {
+                          showError("Lỗi: " + msg);
+                        }
+                      }
+                    }}
+                    disabled={latitude == null || longitude == null}
+                    className={`mt-3 w-full py-3 text-white rounded-xl flex items-center justify-center gap-2 font-medium shadow-md transition-all ${
+                      latitude == null || longitude == null
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                    }`}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    Cập nhật vị trí đã chọn
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={openEditModal}
-                  className="w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center gap-2"
-                >
-                  <FaEdit /> Chỉnh sửa
-                </button>
               </div>
 
               <div className="flex-1 flex flex-col justify-end">
@@ -801,10 +1005,22 @@ export default function Checkout() {
               </ul>
             </div>
             <div className="p-6 border-t bg-gray-50">
+              {distance != null && (
+                <div className="flex justify-between text-sm text-gray-600 border-t pt-2">
+                  <span>
+                    Khoảng cách: <strong>{distance} km</strong>
+                  </span>
+                  <span>
+                    Phí ship:{" "}
+                    <strong>{shippingFee.toLocaleString("vi-VN")}₫</strong>
+                  </span>
+                </div>
+              )}
+
               <div className="flex justify-between text-xl font-bold">
                 <span>Tổng cộng:</span>
                 <span className="text-yellow-600">
-                  {total.toLocaleString("vi-VN")}₫
+                  {finalTotal.toLocaleString("vi-VN")}₫
                 </span>
               </div>
             </div>
@@ -884,6 +1100,35 @@ export default function Checkout() {
           </div>
         </div>
       )}
+
+      {/* Thêm Dialog lỗi khoảng cách ngay cuối file, trước </div> chính hoặc sau 2 modal cũ cũng được nha~ */}
+      <Dialog
+        open={!!distanceError}
+        onOpenChange={() => setDistanceError(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex justify-center items-center gap-2">
+              <span className="text-3xl">Không thể giao hàng!</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-6 text-center space-y-4">
+            <p className="text-lg whitespace-pre-line leading-relaxed">
+              {distanceError}
+            </p>
+
+            <div className="flex flex-col gap-3 mt-6">
+              <Button
+                onClick={() => setDistanceError(null)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Tôi hiểu rồi
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL QR - CHỈ ĐÓNG KHI ĐÃ XÁC NHẬN */}
       {isQrModalOpen && qrModalData && (

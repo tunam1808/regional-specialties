@@ -26,6 +26,7 @@ interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  LoaiDoAn?: string;
 }
 
 interface Order {
@@ -37,6 +38,8 @@ interface Order {
   SanPhamDaChon: OrderItem[];
   TongTien: number;
   TrangThai: string;
+  KhoangCach?: number | null;
+  PhiShip?: number;
 }
 
 export default function OrderDetail() {
@@ -111,6 +114,7 @@ export default function OrderDetail() {
           name: item.TenSP,
           price: item.GiaBanTaiThoiDiem,
           quantity: item.SoLuong,
+          LoaiDoAn: item.LoaiDoAn || "Đồ khô",
         })
       );
 
@@ -123,6 +127,8 @@ export default function OrderDetail() {
         SanPhamDaChon: sanPhamDaChon,
         TongTien: fullOrder.TongTien,
         TrangThai: fullOrder.TrangThai,
+        KhoangCach: fullOrder.KhoangCach || null,
+        PhiShip: fullOrder.PhiShip || 0,
       });
     } catch (err) {
       showError("Lỗi tải chi tiết đơn hàng!");
@@ -459,6 +465,26 @@ export default function OrderDetail() {
                       Tổng tiền: {formatCurrency(selectedOrder.TongTien)}₫
                     </p>
                   </div>
+                  {/* HIỂN THỊ PHÍ SHIP + KHOẢNG CÁCH */}
+                  {selectedOrder.PhiShip != null &&
+                    selectedOrder.PhiShip > 0 && (
+                      <div className="text-right mt-3 space-y-1 text-sm text-gray-600">
+                        {selectedOrder.KhoangCach != null && (
+                          <p>
+                            Khoảng cách:{" "}
+                            <strong>
+                              {Number(selectedOrder.KhoangCach).toFixed(2)} km
+                            </strong>
+                          </p>
+                        )}
+                        <p>
+                          Phí ship:{" "}
+                          <strong className="text-green-600">
+                            {formatCurrency(selectedOrder.PhiShip)}₫
+                          </strong>
+                        </p>
+                      </div>
+                    )}
                 </div>
               </>
             ) : null}

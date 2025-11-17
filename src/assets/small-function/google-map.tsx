@@ -1,9 +1,9 @@
 // src/assets/small-function/google-map.tsx
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// === FIX ICON (VITE) ===
+// === FIX ICON ===
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -12,7 +12,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// === FIX CSS TAILWIND ===
+// === FIX CSS ===
 const fixCSS = () => {
   const id = "leaflet-css-fix";
   if (document.getElementById(id)) return;
@@ -25,40 +25,33 @@ const fixCSS = () => {
   document.head.appendChild(style);
 };
 
-// === REVERSE GEOCODE (TỰ ĐỘNG LẤY ĐỊA CHỈ) ===
+// === REVERSE GEOCODE ===
 const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
   const cacheKey = `addr_${lat.toFixed(6)}_${lng.toFixed(6)}`;
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) return cached;
 
   try {
-    // Delay 1s để tránh rate limit
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1100)); // >1s
 
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
       {
         headers: {
-          "User-Agent": "MyShopApp/1.0[](http://localhost:5173)",
+          "User-Agent": "MyShopApp/1.0[](http://localhost:5173)", // SỬA TẠI ĐÂY
         },
       }
     );
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
     const data = await res.json();
 
-    if (data.error) {
-      console.warn("Nominatim error:", data.error);
-      return "Không xác định được địa chỉ";
-    }
-
-    const address = data.display_name || "Địa chỉ không rõ";
+    const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     sessionStorage.setItem(cacheKey, address);
     return address;
   } catch (err) {
-    console.error("Geocoding error:", err);
-    return "Lỗi lấy địa chỉ";
+    console.error("Reverse geocoding error:", err);
+    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   }
 };
 
@@ -79,8 +72,8 @@ export default function Map({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const initRef = useRef(false);
+  const [addressLoading, setAddressLoading] = useState(false);
 
-  // === VALIDATE COORDS ===
   const isValid = (lat?: number, lng?: number) =>
     lat != null &&
     lng != null &&
@@ -101,7 +94,6 @@ export default function Map({
     fixCSS();
 
     const map = L.map(mapRef.current).setView([lat, lng], zoom);
-
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
       maxZoom: 19,
@@ -111,27 +103,24 @@ export default function Map({
       draggable: true,
       autoPan: true,
     }).addTo(map);
+    markerRef.current = marker;
+    mapInstanceRef.current = map;
 
-    // === KÉO THẢ → GỌI CALLBACK + LẤY ĐỊA CHỈ ===
     marker.on("dragend", async () => {
-      const pos = marker.getLatLng();
+      if (!markerRef.current) return;
+      const pos = markerRef.current.getLatLng();
       const newLat = pos.lat;
       const newLng = pos.lng;
 
-      // Gọi callback gốc
+      setAddressLoading(true);
       onPositionChange?.(newLat, newLng);
 
-      // Tự động lấy địa chỉ
       const address = await reverseGeocode(newLat, newLng);
-
-      // Gửi địa chỉ về parent (Checkout)
+      setAddressLoading(false);
       onPositionChange?.(newLat, newLng, address);
     });
 
-    mapInstanceRef.current = map;
-    markerRef.current = marker;
-
-    setTimeout(() => map.invalidateSize(), 150);
+    requestAnimationFrame(() => map.invalidateSize());
 
     return () => {
       map.remove();
@@ -141,25 +130,32 @@ export default function Map({
     };
   }, []);
 
-  // === CẬP NHẬT VỊ TRÍ KHI PROPS THAY ĐỔI ===
+  // === CẬP NHẬT KHI PROPS THAY ĐỔI ===
   useEffect(() => {
     if (!mapInstanceRef.current || !markerRef.current) return;
 
     const newLat = isValid(propLat, propLng) ? propLat : lat;
     const newLng = isValid(propLat, propLng) ? propLng : lng;
-
     const latLng = L.latLng(newLat, newLng);
+
     mapInstanceRef.current.setView(latLng, zoom, { animate: true });
     markerRef.current.setLatLng(latLng);
 
-    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100);
+    requestAnimationFrame(() => mapInstanceRef.current?.invalidateSize());
   }, [propLat, propLng, zoom]);
 
   return (
-    <div
-      ref={mapRef}
-      style={{ width: "100%", height: "320px" }}
-      className="rounded-xl border border-gray-300 overflow-hidden shadow-sm"
-    />
+    <div className="relative">
+      <div
+        ref={mapRef}
+        style={{ width: "100%", height: "320px" }}
+        className="rounded-xl border border-gray-300 overflow-hidden shadow-sm"
+      />
+      {addressLoading && (
+        <p className="absolute bottom-2 left-2 bg-white px-2 py-1 rounded text-xs text-blue-600 shadow">
+          Đang lấy địa chỉ...
+        </p>
+      )}
+    </div>
   );
 }

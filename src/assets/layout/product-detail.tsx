@@ -114,14 +114,52 @@ export default function ProductDetail() {
     }
 
     try {
+      // GỌI API THÊM GIỎ (chỉ để backend biết)
       await addProductToCart({
-        MaSP: product.MaSP, // ← giờ TS biết chắc chắn là number
+        MaSP: product.MaSP,
         SoLuong: quantity,
         GiaBanTaiThoiDiem: product.GiaSauGiam || product.GiaBan,
         GhiChu: "",
       });
 
       showSuccess(`Đã thêm "${product.TenSP}" vào giỏ hàng!`);
+
+      // === BẮT ĐẦU LƯU VÀO localStorage (QUAN TRỌNG NHẤT) ===
+      const existingCart = JSON.parse(
+        localStorage.getItem("cart_checkout") || "[]"
+      );
+
+      // Tìm sản phẩm đã có trong giỏ (không tính buyNow)
+      const existingItemIndex = existingCart.findIndex(
+        (item: any) => item.MaSP === product.MaSP && item.buyNow !== true
+      );
+
+      const cartItem = {
+        MaSP: product.MaSP,
+        id: product.MaSP,
+        name: product.TenSP,
+        price: product.GiaSauGiam || product.GiaBan,
+        GiaBan: product.GiaBan,
+        hinhAnh: product.HinhAnh,
+        quantity: quantity,
+        checked: true,
+        buyNow: false,
+        LoaiDoAn: product.LoaiDoAn, // ← BẮT BUỘC C&Oacute;
+      };
+
+      if (existingItemIndex >= 0) {
+        // Nếu đã có → tăng số lượng
+        existingCart[existingItemIndex].quantity += quantity;
+        // Cập nhật lại LoaiDoAn (đề phòng thay đổi)
+        existingCart[existingItemIndex].LoaiDoAn = product.LoaiDoAn || "Đồ khô";
+      } else {
+        // Nếu chưa có → thêm mới
+        existingCart.push(cartItem);
+      }
+
+      // LƯU LẠI VÀO localStorage
+      localStorage.setItem("cart_checkout", JSON.stringify(existingCart));
+      // === KẾT THÚC ===
     } catch (error: any) {
       const msg = error.response?.data?.message || "Không thể thêm vào giỏ!";
       showError(msg);
@@ -395,6 +433,7 @@ export default function ProductDetail() {
                         quantity: quantity,
                         checked: true,
                         buyNow: true,
+                        LoaiDoAn: product.LoaiDoAn || "Đồ khô",
                       };
                       localStorage.setItem(
                         "cart_checkout",

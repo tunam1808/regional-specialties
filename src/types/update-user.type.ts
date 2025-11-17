@@ -19,6 +19,8 @@ export interface User {
   PhuongXa?: string;
   DiaChiChiTiet?: string; // địa chỉ cụ thể (số nhà, ngõ, thôn...)
   DiaChiDayDu?: string; // địa chỉ gộp tự động (từ DB)
+  Latitude?: number | null;
+  Longitude?: number | null;
 }
 
 export type CreateUserInput = Omit<User, "id" | "created_at"> & {

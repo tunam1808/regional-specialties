@@ -27,6 +27,7 @@ interface ProductType {
   SoLuong: number;
   GiaBanTaiThoiDiem: number;
   checked?: boolean;
+  LoaiDoAn: string;
 }
 
 const Cart: React.FC = () => {
@@ -153,6 +154,7 @@ const Cart: React.FC = () => {
       price: item.GiaBanTaiThoiDiem,
       quantity: item.SoLuong,
       hinhAnh: item.HinhAnh,
+      LoaiDoAn: item.LoaiDoAn || "Đồ khô",
     }));
     localStorage.setItem("cart_checkout", JSON.stringify(checkoutItems));
 
