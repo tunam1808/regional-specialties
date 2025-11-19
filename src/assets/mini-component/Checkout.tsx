@@ -36,6 +36,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/dialog";
+import { orderSuccessEmail } from "@/utils/emailTemplates";
+import { sendEmailAPI } from "@/api/email";
 
 interface CartItem {
   MaSP: number;
@@ -54,6 +56,7 @@ interface Customer {
   name: string;
   phone: string;
   address: string;
+  email?: string;
 }
 
 interface Province {
@@ -258,6 +261,7 @@ export default function Checkout() {
           name: profile.fullname || profile.HoTen || "",
           phone: profile.SoDienThoai || "",
           address: profile.DiaChiDayDu || "",
+          email: profile.Email || profile.email || "",
         });
         setUserId(profile.id ? String(profile.id) : null);
 
@@ -614,6 +618,45 @@ export default function Checkout() {
 
       localStorage.removeItem("cart_checkout");
       showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
+
+      // ================== TỰ ĐỘNG GỬI EMAIL CHO KHÁCH SIÊU XINH ==================
+      try {
+        const emailItems = selectedItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price || item.GiaBan,
+        }));
+
+        const emailHtml = orderSuccessEmail(
+          customer.name || "Khách yêu quý",
+          res.MaDonHang,
+          finalTotal,
+          shippingFee,
+          emailItems,
+          customer.address,
+          paymentMethod === "cod"
+            ? "Tiền mặt"
+            : paymentMethod === "qr"
+            ? "Chuyển khoản"
+            : "PayPal"
+        );
+
+        await sendEmailAPI({
+          to: customer.email || `${customer.phone}@khachhang.shop`,
+          subject: `Đặt hàng thành công! Mã đơn #${res.MaDonHang}`,
+          message: emailHtml,
+          userEmail: customer.email || "no-reply@shopcuachong.com", // tùy backend yêu cầu
+        });
+
+        console.log("Đã gửi email xác nhận đơn hàng cho khách rồi á ~");
+      } catch (emailErr) {
+        // Không làm hỏng flow đặt hàng dù email lỗi
+        console.warn(
+          "Gửi email thất bại (nhưng đơn hàng vẫn thành công nha):",
+          emailErr
+        );
+      }
+      // ===========================================================================
 
       if (paymentMethod === "qr") {
         const info = `Thanh toan don hang #${res.MaDonHang}`;

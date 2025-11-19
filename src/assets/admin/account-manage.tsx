@@ -31,6 +31,7 @@ export default function AdminUsers() {
   const [formData, setFormData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [TinhThanhCode, setTinhThanhCode] = useState<string>("");
 
   // ✅ State cho địa chỉ
   const [provinces, setProvinces] = useState<any[]>([]);
@@ -103,7 +104,7 @@ export default function AdminUsers() {
     });
   };
 
-  const openEditModal = (user: User) => {
+  const openEditModal = async (user: User) => {
     setEditingUser(user);
     setFormData({
       fullname: user.fullname || "",
@@ -111,18 +112,37 @@ export default function AdminUsers() {
       email: user.email || "",
       SoDienThoai: user.SoDienThoai || "",
       TinhThanh: user.TinhThanh || "",
-
       PhuongXa: user.PhuongXa || "",
       DiaChiChiTiet: user.DiaChiChiTiet || "",
       avatar: user.avatar || "",
     });
 
-    // ✅ Khi mở modal edit, nạp sẵn danh sách quận/huyện, phường/xã
+    // ĐẢM BẢO provinces đã có dữ liệu
+    let provincesList = provinces;
+    if (provincesList.length === 0) {
+      console.log("Tỉnh chưa load, đang load lại...");
+      provincesList = await getProvinces();
+      setProvinces(provincesList);
+    }
+
+    // Tìm tỉnh và set code để useEffect load phường/xã
     if (user.TinhThanh) {
-      const prov = provinces.find((p) => p.name === user.TinhThanh);
-      if (prov) {
-        getWards(prov.id || prov.code).then(setWards);
+      const province = provincesList.find(
+        (p) => p.name === user.TinhThanh || p.name_with_type === user.TinhThanh
+      );
+
+      if (province) {
+        const code = province.code || province.id || province.idProvince;
+        console.log("Tìm thấy tỉnh → set code:", code);
+        setTinhThanhCode(code.toString());
+      } else {
+        console.warn("Không tìm thấy tỉnh:", user.TinhThanh);
+        setTinhThanhCode("");
+        setWards([]);
       }
+    } else {
+      setTinhThanhCode("");
+      setWards([]);
     }
   };
 
@@ -206,20 +226,42 @@ export default function AdminUsers() {
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const provinceName = e.target.value;
-    const province = provinces.find((p) => p.name === provinceName);
+    const province = provinces.find(
+      (p) => p.name === provinceName || p.name_with_type === provinceName
+    );
+
     setFormData({
       ...formData,
       TinhThanh: provinceName,
-
       PhuongXa: "",
     });
+
     if (province) {
-      const data = await getWards(province.id || province.code); // ← GỌI TRỰC TIẾP
-      setWards(data);
+      const code = province.code || province.id || province.idProvince;
+      setTinhThanhCode(code.toString());
+      // getWards sẽ tự chạy nhờ useEffect
     } else {
+      setTinhThanhCode("");
       setWards([]);
     }
   };
+
+  // TỰ ĐỘNG LOAD PHƯỜNG/XÃ KHI CÓ TỈNH
+  useEffect(() => {
+    if (TinhThanhCode) {
+      console.log("Đang load phường/xã cho code:", TinhThanhCode);
+      getWards(TinhThanhCode)
+        .then((data) => {
+          setWards(Array.isArray(data) ? data : []);
+        })
+        .catch((err) => {
+          console.error("Lỗi load phường/xã:", err);
+          setWards([]);
+        });
+    } else {
+      setWards([]);
+    }
+  }, [TinhThanhCode]);
 
   const handleWardChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setFormData({ ...formData, PhuongXa: e.target.value });
