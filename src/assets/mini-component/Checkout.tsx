@@ -619,7 +619,7 @@ export default function Checkout() {
       localStorage.removeItem("cart_checkout");
       showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
 
-      // ================== TỰ ĐỘNG GỬI EMAIL CHO KHÁCH SIÊU XINH ==================
+      // ================== TỰ ĐỘNG GỬI EMAIL CHO KHÁCH ==================
       try {
         const emailItems = selectedItems.map((item) => ({
           name: item.name,
