@@ -36,8 +36,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/dialog";
-import { orderSuccessEmail } from "@/utils/emailTemplates";
-import { sendEmailAPI } from "@/api/email";
+// import { orderSuccessEmail } from "@/utils/emailTemplates";
+// import { sendEmailAPI } from "@/api/email";
 
 interface CartItem {
   MaSP: number;
