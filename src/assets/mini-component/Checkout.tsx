@@ -153,7 +153,7 @@ export default function Checkout() {
 
     // Kiểm tra ngay lập tức + mỗi 3 giây
     checkOrderStatus();
-    const interval = setInterval(checkOrderStatus, 20000);
+    const interval = setInterval(checkOrderStatus, 3000);
 
     return () => {
       isCheckingRef.current = false;
@@ -620,42 +620,42 @@ export default function Checkout() {
       showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
 
       // ================== TỰ ĐỘNG GỬI EMAIL CHO KHÁCH ==================
-      try {
-        const emailItems = selectedItems.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price || item.GiaBan,
-        }));
+      // try {
+      //   const emailItems = selectedItems.map((item) => ({
+      //     name: item.name,
+      //     quantity: item.quantity,
+      //     price: item.price || item.GiaBan,
+      //   }));
 
-        const emailHtml = orderSuccessEmail(
-          customer.name || "Khách yêu quý",
-          res.MaDonHang,
-          finalTotal,
-          shippingFee,
-          emailItems,
-          customer.address,
-          paymentMethod === "cod"
-            ? "Tiền mặt"
-            : paymentMethod === "qr"
-            ? "Chuyển khoản"
-            : "PayPal"
-        );
+      //   const emailHtml = orderSuccessEmail(
+      //     customer.name || "Khách yêu quý",
+      //     res.MaDonHang,
+      //     finalTotal,
+      //     shippingFee,
+      //     emailItems,
+      //     customer.address,
+      //     paymentMethod === "cod"
+      //       ? "Tiền mặt"
+      //       : paymentMethod === "qr"
+      //       ? "Chuyển khoản"
+      //       : "PayPal"
+      //   );
 
-        await sendEmailAPI({
-          to: customer.email || `${customer.phone}@khachhang.shop`,
-          subject: `Đặt hàng thành công! Mã đơn #${res.MaDonHang}`,
-          message: emailHtml,
-          userEmail: customer.email || "no-reply@shopcuachong.com", // tùy backend yêu cầu
-        });
+      //   await sendEmailAPI({
+      //     to: customer.email || `${customer.phone}@khachhang.shop`,
+      //     subject: `Đặt hàng thành công! Mã đơn #${res.MaDonHang}`,
+      //     message: emailHtml,
+      //     userEmail: customer.email || "no-reply@shopcuachong.com", // tùy backend yêu cầu
+      //   });
 
-        console.log("Đã gửi email xác nhận đơn hàng cho khách rồi á ~");
-      } catch (emailErr) {
-        // Không làm hỏng flow đặt hàng dù email lỗi
-        console.warn(
-          "Gửi email thất bại (nhưng đơn hàng vẫn thành công nha):",
-          emailErr
-        );
-      }
+      //   console.log("Đã gửi email xác nhận đơn hàng cho khách rồi á ~");
+      // } catch (emailErr) {
+      //   // Không làm hỏng flow đặt hàng dù email lỗi
+      //   console.warn(
+      //     "Gửi email thất bại (nhưng đơn hàng vẫn thành công nha):",
+      //     emailErr
+      //   );
+      // }
       // ===========================================================================
 
       if (paymentMethod === "qr") {
