@@ -160,9 +160,7 @@ export default function ContactSection() {
 
             <div className="flex items-center gap-4">
               <MdLocationOn className="text-yellow-500" />
-              <span>
-                Vinhomes chân đê, Xóm 1, Cổ Điển, Hải Bối, Đông Anh, Hà Nội
-              </span>
+              <span>Ngõ 389 Xuân Khanh, Phường Tùng Thiện, TP. Hà Nội</span>
             </div>
 
             <div className="flex items-center gap-4">

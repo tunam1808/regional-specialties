@@ -153,7 +153,7 @@ export default function Checkout() {
 
     // Kiểm tra ngay lập tức + mỗi 3 giây
     checkOrderStatus();
-    const interval = setInterval(checkOrderStatus, 7000);
+    const interval = setInterval(checkOrderStatus, 20000);
 
     return () => {
       isCheckingRef.current = false;

@@ -147,22 +147,31 @@ export default function AboutStore() {
         className="mt-16 max-w-5xl mx-auto text-center"
       >
         <p className="text-gray-600 mb-6">
-          Số 25 Nguyễn Văn Linh, Quận Hải Châu, TP. Đà Nẵng
+          Số 3, Ngõ 389 Xuân Khanh, Phường Tùng Thiện, TP. Hà Nội
           <br />
           <span className="text-orange-600 font-medium">
-            Hotline: 0905 123 456
+            Hotline: 0865 834 981
           </span>
         </p>
 
         <div className="rounded-2xl overflow-hidden shadow-lg">
           <iframe
             title="Bản đồ cửa hàng"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.0006763380994!2d108.220706!3d16.059380!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314219d5b4c0c0b1%3A0x6cf9a3c3f8cfb417!2zTmd1eeG7hW4gVsSDbiBMaW5oLCBI4bqjaSBDaMOidSwgxJDDoCBO4bq1bmcsIFZpZXRuYW0!5e0!3m2!1svi!2s!4v1698912452724!5m2!1svi!2s"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3722.1495533267816!2d105.4420887108003!3d21.106602985019396!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31345fa50213547f%3A0x79245ca419fe4290!2zMzg5LCBIw6AgTuG7mWksIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1763651866375!5m2!1svi!2s"
             width="100%"
-            height="350"
+            height="500"
             loading="lazy"
             allowFullScreen
           ></iframe>
+          {/* <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3722.1495533267816!2d105.4420887108003!3d21.106602985019396!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31345fa50213547f%3A0x79245ca419fe4290!2zMzg5LCBIw6AgTuG7mWksIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1763651866375!5m2!1svi!2s"
+            width="600"
+            height="450"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe> */}
         </div>
       </motion.div>
     </section>
