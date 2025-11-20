@@ -1244,7 +1244,7 @@ export default function Checkout() {
                     );
                     showSuccess("Đã báo chuyển khoản!");
 
-                    // Bước 2: Tự động xác nhận sau 7 giây (nếu admin không hủy)
+                    // Bước 2: Tự động xác nhận sau 20 giây (nếu admin không hủy)
                     setTimeout(async () => {
                       try {
                         const order = await getOrderById(qrModalData.MaDonHang);
@@ -1263,7 +1263,7 @@ export default function Checkout() {
                       } catch (err) {
                         console.error("Lỗi tự động xác nhận:", err);
                       }
-                    }, 7000);
+                    }, 20000);
                   } catch (err: any) {
                     if (
                       err.response?.status === 401 ||
