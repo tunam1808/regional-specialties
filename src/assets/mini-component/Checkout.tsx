@@ -617,7 +617,8 @@ export default function Checkout() {
       }
 
       localStorage.removeItem("cart_checkout");
-      showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
+      // showSuccess(`Đặt hàng thành công! Mã đơn: ${res.MaDonHang}`);
+      showSuccess(`Đang chuyển hướng...`);
 
       // ================== TỰ ĐỘNG GỬI EMAIL CHO KHÁCH ==================
       // try {
